@@ -10,6 +10,7 @@ typedef struct Table_Allocator* Table_AllocatorPtr;
 typedef struct Table* Table_Ptr;
 typedef struct Shell* Shell_Ptr;
 typedef struct Tuple* Tuple_Ptr;
+typedef struct Column_Stats* Column_Stats_Ptr;
 
 Table_AllocatorPtr Create_Table_Allocator(Argument_Data_Ptr);
 Table_Ptr Allocate_Table(Table_AllocatorPtr Table_Allocator);

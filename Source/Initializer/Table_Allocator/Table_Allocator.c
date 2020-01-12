@@ -1,8 +1,12 @@
 #include "Table_Allocator.h"
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
+#include <stdbool.h> 
 
 #include "../../Util/Utilities.h"
+
+#define N 50000000
 
 struct Table_Allocator{
   char* Init_Filename;
@@ -19,6 +23,14 @@ struct Shell {
   uint64_t num_of_tuples;
   uint64_t num_of_columns;
   Tuple_Ptr* Array;
+  Column_Stats_Ptr stats;
+};
+
+struct Column_Stats {
+  uint64_t l;
+  uint64_t u;
+  uint64_t f;
+  uint64_t d;
 };
 
 Table_AllocatorPtr Create_Table_Allocator(Argument_Data_Ptr Data){
@@ -74,6 +86,9 @@ static char* Get_File_Name(char* line_buffer, int size) {
 
 static void Print_Shell(Shell_Ptr Shell, FILE *fp) {
   fprintf(fp, "sizes: %llu %llu\n", Shell->num_of_tuples, Shell->num_of_columns);
+  for(int i = 0; i < Shell->num_of_columns; i++)
+    fprintf(fp, "stats: l = %llu u = %llu f = %llu d = %llu\n", Shell->stats[i].l, Shell->stats[i].u, Shell->stats[i].f, Shell->stats[i].d);
+  fprintf(fp, "\n");
   for(int i =0;i<Shell->num_of_tuples;i++){
     for(int j =0;j<Shell->num_of_columns;j++) {
       fprintf(fp,"(%llu)",Shell->Array[j][i].row_id);
@@ -96,6 +111,8 @@ void Print_Table(Table_Ptr Table) {
 void Allocate_Shell(Shell_Ptr Shell){
   Shell->Array = malloc(Shell->num_of_columns * sizeof(Tuple_Ptr));
   Shell->Array[0]=malloc((Shell->num_of_columns*Shell->num_of_tuples)* sizeof(struct Tuple));
+  
+  Shell->stats = (Column_Stats_Ptr)malloc(Shell->num_of_columns * sizeof(struct Column_Stats));
 }
 
 static void Read_from_File(uint64_t* data ,FILE* fp){
@@ -105,12 +122,62 @@ static void Read_from_File(uint64_t* data ,FILE* fp){
   }
 }
 
+static int Element_Exists(Tuple_Ptr Tuple, uint64_t el, uint64_t tuples) {
+  //printf("element %llu (%llu tuples so far)\n", el, tuples);
+  for(int i = 0; i < tuples; i++){
+   // printf("\t%llu \n", Tuple[i]);
+    if(Tuple[i].element == el) {
+      //printf("element %llu (%llu tuples so far)\n", el, tuples);
+      //printf("exists\n");
+      return 1;
+    }
+  }
+  //printf("does not exist\n");
+  return 0;
+}
+
 static void Read_Data(Shell_Ptr Shell,FILE* fp){
   for(int i =0;i<Shell->num_of_columns;i++){
+    Shell->stats[i].l = INT_MAX;
+    Shell->stats[i].u = 0;
+    Shell->stats[i].d = 0;
     for(int j=0;j<Shell->num_of_tuples;j++){
       Read_from_File(&Shell->Array[i][j].element, fp);
       Shell->Array[i][j].row_id=j;
+	  
+	  //find min and max of the column
+	  if(Shell->Array[i][j].element < Shell->stats[i].l)
+	    Shell->stats[i].l = Shell->Array[i][j].element;
+	  if(Shell->Array[i][j].element > Shell->stats[i].u)
+	    Shell->stats[i].u = Shell->Array[i][j].element;
+	  
+	  //if(!Element_Exists(Shell->Array[i], Shell->Array[i][j].element, j))
+	  //  Shell->stats[i].d++;
+
     }
+	Shell->stats[i].f = Shell->num_of_tuples;
+
+//	uint64_t s = Shell->stats[i].u - Shell->stats[i].l + 1;
+//	uint64_t diff = Shell->stats[i].u;
+//	if(s > N) {
+//      s = N;
+//      diff = Shell->stats[i].l % N;
+//	}
+//
+//	bool *array = (bool*)malloc(s * sizeof(bool)); 
+//	for(int k = 0; k < s; k++) {
+//      array[k] = false;
+//      for(int j = 0; j < Shell->num_of_tuples; j++){
+//	    if(Shell->Array[i][j].element - diff > 0 && Shell->Array[i][j].element - diff < s)
+//          array[Shell->Array[i][j].element - diff] = true;
+//	  }
+//    }
+
+//	for(int j = 0; j < s; j++) {
+//		if(array[j] == true) printf("POUTSOBANANA\n");
+//	}
+
+//    free(array);
   }
 }
 
