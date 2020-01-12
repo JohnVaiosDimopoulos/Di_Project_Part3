@@ -3,35 +3,52 @@
 #include "../Util/Utilities.h"
 #include "../Query_execution/Query_executor/Query_Executor.h"
 #include <pthread.h>
+#include <semaphore.h>
 #include <unistd.h>
 
-
-pthread_mutex_t m;// = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t t_m;// = PTHREAD_MUTEX_INITIALIZER;
-
+sem_t me;
+	   
 struct Args {
-  pthread_t thread_id; 
+  pthread_t thread_id;
   Query_Ptr Current_Query;
   Table_Ptr Relations;
   FILE *fp_write;
 };
+ 
+typedef struct Args* Args_Ptr;
 
-void *myThreadFun(void *vargp) { 
-	pthread_mutex_lock(&t_m);
-	struct Args *args = (struct Args*) vargp; 
-    printf("Printing from Thread %lu,\nQuery:", *args->thread_id); 
-	Print_Query(args->Current_Query);
-	sleep(1);
-    //Execute_Query(args->Current_Query, args->Relations, args->fp_write);
-    //fprintf(args->fp_write, "\n");
-   // Delete_Query(args->Current_Query);
-   // free(args->Current_Query);
-	pthread_mutex_unlock(&t_m);
+void *myThreadFun(void *vargp) {
+  struct Args *args = (struct Args*) vargp;
+  uint64_t *id = (uint64_t*)args->thread_id;
+  printf("Printing from Thread \nQuery:");
+  Print_Query(args->Current_Query);
+  //sleep(1);
 
-//	pthread_exit(args->thread_id);
-	return NULL;
-} 
-   
+  pthread_mutex_lock(&t_m);
+  Query_Ptr Query = Allocate_And_Copy_Query(args->Current_Query);
+  Table_Ptr Relations = args->Relations;
+  FILE *fp_write = args->fp_write;
+
+  Delete_Query(args->Current_Query);
+  free(args->Current_Query);
+  args->Relations = NULL;
+  args->fp_write = NULL;
+  pthread_mutex_unlock(&t_m);
+
+  Execute_Query(Query, Relations, fp_write);
+  Delete_Query(Query);
+  free(Query);
+
+  //fprintf(args->fp_write, "\n");
+  
+  //printf("UNLOCK\n");
+  sem_post(&me);
+    
+//  pthread_exit(args->thread_id);
+  return NULL;
+}   
+
 
 void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
 
@@ -40,56 +57,41 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
   FILE *fp;
   Open_File_for_Read(&fp, path);
   Batch_Ptr Current_Batch;
-  Query_Ptr Current_Query;
 
-  FILE *fp_write = fopen("Results", "w");
   pthread_t thread_id; 
-
-  if(pthread_mutex_init(&m, NULL) != 0) {
-    printf("\n mutex init failed\n"); exit(1);
-  }
   if(pthread_mutex_init(&t_m, NULL) != 0) {
     printf("\n mutex init failed\n"); exit(1);
   }
+  sem_init(&me,1,0);
 
-
+  FILE *fp_write = fopen("Results", "w");
   while((Current_Batch = Read_next_Batch(fp)) != NULL) {
-	//while(Get_num_of_Queries(Current_Batch)){
-	for(int i = 0; i < 2; i++) {
-	 
-	  pthread_mutex_lock(&m);
-      printf("LOCK\n"); 
-      struct Args args;
-	  Current_Query = Pop_Next_Query_from_Batch(Current_Batch);
+    int cnt = Get_num_of_Queries(Current_Batch);
+    Args_Ptr *args = (Args_Ptr*)malloc(cnt * sizeof(Args_Ptr));
+	int i = 0;
+	while(Get_num_of_Queries(Current_Batch)){
+    //for(int i = 0; i < 10; i++) {
+      args[i] = (Args_Ptr)malloc(sizeof(struct Args));
+      args[i]->thread_id = thread_id;
+      args[i]->Current_Query = Pop_Next_Query_from_Batch(Current_Batch);
+      args[i]->Relations = Relations;
+      args[i]->fp_write = fp_write;
+      
+	  pthread_create(&thread_id, NULL, myThreadFun, (void *)args[i]);
+	//  pthread_join(thread_id, NULL);
 
-      //Execute_Query(Current_Query, Relations, fp_write);
-      //printf("Before Thread\n"); 
-      args.thread_id = thread_id;
-      args.Current_Query = Current_Query;
-      args.Relations = Relations;
-      args.fp_write = fp_write;
-
-      //fprintf(fp_write, "\n");
-      //Delete_Query(Current_Query);
-      //free(Current_Query);
-
-      pthread_create(&thread_id, NULL, myThreadFun, (void *)&args); 
-      printf("UNLOCK\n"); 
-	  pthread_mutex_unlock(&m);
-      //pthread_join(thread_id, NULL); 
-      //printf("After Thread\n\n"); 
-
-
-	  //this break and the next one should not be here
-	  //just for checking
-//	  break;
+	  i++; 
     }
+	//printf("\t\t\t%d\n", cnt);
+    for(int i = 0; i < cnt; i++) {
+      //printf("LOCK\n");
+      sem_wait(&me);
+	  free(args[i]);
+    }
+	free(args);
     Delete_Batch(Current_Batch);
-	break;
+//    break;
   }
-  //pthread_mutex_destroy(&t_m);
-  pthread_mutex_destroy(&m);
-
   fclose(fp_write);
 
   free(path);
