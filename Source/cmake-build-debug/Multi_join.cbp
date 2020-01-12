@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Multi_join"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Multi_join">
+				<Option output="/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Multi_join" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/10.0.0/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 Multi_join"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Multi_join/fast">
+				<Option output="/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Multi_join" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/10.0.0/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 Multi_join/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/Users/Danae/CLionProjects/Di_Project_part2/Source/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Batch/Batch.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Batch/Batch.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Initializer/Argument_Data/Arguments_Data.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Initializer/Argument_Data/Arguments_Data.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Initializer/Argument_Manager/Argument_Manager.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Initializer/Argument_Manager/Argument_Manager.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Initializer/Table_Allocator/Table_Allocator.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Initializer/Table_Allocator/Table_Allocator.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query/Query.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query/Query.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Execution_Queue/Execution_Queue.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Execution_Queue/Execution_Queue.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Filter/Filter.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Filter/Filter.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Join_Struct/Join_Struct.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Join_Struct/Join_Struct.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Preparator/Preparator.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Preparator/Preparator.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Projection/Projection.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Projection/Projection.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Filter_Executor/Filter_Executor.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Filter_Executor/Filter_Executor.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Histogram/Histogram.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Histogram/Histogram.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Join/Join.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Join/Join.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Join_Execution.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Join_Execution.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Prefix_sum/Prefix_Sum.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Prefix_sum/Prefix_Sum.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Relation_Creator/Relation_Creator.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Relation_Creator/Relation_Creator.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Relation_Sorting/Relation_Sorting.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Relation_Sorting/Relation_Sorting.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Results_List/Results_List.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Join_Execution/Results_List/Results_List.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Projection_Executor/Projection_Executor.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Projection_Executor/Projection_Executor.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Query_Executor.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_executor/Query_Executor.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_parser/Parse_Predicates/Parse_Predicates.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_parser/Parse_Predicates/Parse_Predicates.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_parser/Parse_Projections/Parse_Projections.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_parser/Parse_Projections/Parse_Projections.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_parser/Parse_Relations/Parse_Relations.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_parser/Parse_Relations/Parse_Relations.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_parser/Query_parser.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Query_execution/Query_parser/Query_parser.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Util/Utilities.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Util/Utilities.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Work_Executor/Work_Executor.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Work_Executor/Work_Executor.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Work_Reader/Work_Reader.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/Work_Reader/Work_Reader.h">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/main.c">
+			<Option target="Multi_join"/>
+		</Unit>
+		<Unit filename="/Users/Danae/CLionProjects/Di_Project_part2/Source/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
