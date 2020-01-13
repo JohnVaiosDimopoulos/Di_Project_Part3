@@ -41,5 +41,14 @@ void Delete_Table_Allocator(Table_AllocatorPtr);
 void Delete_Table(Table_Ptr);
 //void Print_Relation(Tuple_Ptr*,int,int);
 
+uint64_t Get_Column_l(Shell_Ptr, uint64_t);
+uint64_t Get_Column_u(Shell_Ptr, uint64_t);
+uint64_t Get_Column_f(Shell_Ptr, uint64_t);
+uint64_t Get_Column_d(Shell_Ptr, uint64_t);
+
+void Set_Column_l(Shell_Ptr, uint64_t, uint64_t);
+void Set_Column_u(Shell_Ptr, uint64_t, uint64_t);
+void Set_Column_f(Shell_Ptr, uint64_t, uint64_t);
+void Set_Column_d(Shell_Ptr, uint64_t, uint64_t);
 
 #endif //MULTI_JOIN_TABLE_ALLOCATOR_H

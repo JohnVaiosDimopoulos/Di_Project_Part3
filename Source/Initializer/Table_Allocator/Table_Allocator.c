@@ -140,7 +140,7 @@ static void Read_Data(Shell_Ptr Shell,FILE* fp){
   for(int i =0;i<Shell->num_of_columns;i++){
     Shell->stats[i].l = INT_MAX;
     Shell->stats[i].u = 0;
-    Shell->stats[i].d = 0;
+    Shell->stats[i].d = 5;
     for(int j=0;j<Shell->num_of_tuples;j++){
       Read_from_File(&Shell->Array[i][j].element, fp);
       Shell->Array[i][j].row_id=j;
@@ -153,7 +153,6 @@ static void Read_Data(Shell_Ptr Shell,FILE* fp){
 	  
 	  //if(!Element_Exists(Shell->Array[i], Shell->Array[i][j].element, j))
 	  //  Shell->stats[i].d++;
-
     }
 	Shell->stats[i].f = Shell->num_of_tuples;
 
@@ -229,6 +228,13 @@ Table_Ptr Make_Table_For_Joins(Table_Ptr Relations, int* relations,int num_of_re
       }
 
     }
+	New_Table->Array[i].stats = (Column_Stats_Ptr)malloc(New_Table->Array[i].num_of_columns * sizeof(struct Column_Stats));
+	for(int j = 0; j < num_of_columns; j++) {
+      New_Table->Array[i].stats[j].l = Relations->Array[Original_Shell_index].stats[j].l;
+      New_Table->Array[i].stats[j].u = Relations->Array[Original_Shell_index].stats[j].u;
+      New_Table->Array[i].stats[j].f = Relations->Array[Original_Shell_index].stats[j].f;
+      New_Table->Array[i].stats[j].d = Relations->Array[Original_Shell_index].stats[j].d;
+	}
   }
 
   return New_Table;
@@ -271,6 +277,23 @@ void Delete_Table(Table_Ptr Table) {
   free(Table);
 }
 
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+void Set_Column_l(Shell_Ptr Shell, uint64_t i, uint64_t l){
+  Shell->stats[i].l = l;
+}
+void Set_Column_u(Shell_Ptr Shell, uint64_t i, uint64_t u){
+  Shell->stats[i].u = u;
+}
+void Set_Column_f(Shell_Ptr Shell, uint64_t i, uint64_t f){
+  Shell->stats[i].f = f;
+}
+void Set_Column_d(Shell_Ptr Shell, uint64_t i, uint64_t d){
+  Shell->stats[i].d = d;
+}
+
 void Set_Shell_Array(Shell_Ptr Shell, Tuple_Ptr *Array){
   Shell->Array = Array;
 }
@@ -311,7 +334,22 @@ Tuple_Ptr Get_Column(Shell_Ptr Shell,int column_id){
 }
 
 
+uint64_t Get_Column_l(Shell_Ptr Shell, uint64_t i){
+  printf("from getter %llu %llu\n", Shell->num_of_tuples, Shell->num_of_columns);
+  return Shell->stats[i].l;
+}
 
+uint64_t Get_Column_u(Shell_Ptr Shell, uint64_t i){
+  return Shell->stats[i].u;
+}
+
+uint64_t Get_Column_f(Shell_Ptr Shell, uint64_t i){
+  return Shell->stats[i].f;
+}
+
+uint64_t Get_Column_d(Shell_Ptr Shell, uint64_t i){
+  return Shell->stats[i].d;
+}
 
 
 //Table_Ptr Allocate_Table_with_num_of_Shells(int num_of_shells) {
