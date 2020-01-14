@@ -5,7 +5,7 @@
 
 
 void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp){
-	printf("EXECUTE...\n");
+  printf("\n\nEXECUTE QUERY...\n");
 
   //1.Parse the query
   Parsed_Query_Ptr Parsed_Query = Parse_Query(Query);
@@ -19,7 +19,7 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp){
 
   //2.do the preparations
   Rel_Queue_Ptr Queue = Prepare_Rel_Queue(Parsed_Query);
-  printf("lalal\n");
+  
   //Execution_Queue_Ptr Queue = Prepare_Execution_Queue(Parsed_Query);
 //  Print_Queue(Queue);
 

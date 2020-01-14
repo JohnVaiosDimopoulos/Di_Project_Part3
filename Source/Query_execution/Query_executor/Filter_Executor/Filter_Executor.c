@@ -134,7 +134,7 @@ static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
       break;
     case '=':
       printf("=\n");
-	  if(Get_d_array(Shell)[col][0] == true) {
+	  if(Get_d_array(Shell)[col][con - la] == true) {
 	    printf("\t\t\tIF\n");
 	    f = (uint64_t)(fa / da);
 		d = 1;

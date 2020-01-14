@@ -3,6 +3,7 @@
 #include "../Join_Struct/Join_Struct.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 struct Rel_Queue{
   struct Rel_Queue_Node* head;
@@ -155,6 +156,25 @@ static void Insert_Rel_Node(int rel, Rel_Queue_Ptr Rel_Queue){
     Insert_At_End(rel, Rel_Queue);
 }
 
+static int Already_in_queue(Rel_Queue_Ptr Queue, int rel) {
+  Rel_Queue_Node_Ptr pnode = Queue->head;
+  while(pnode) {
+    if(pnode->rel == rel) return 1;
+    pnode = pnode->next;
+  }
+  return 0;
+}
+
+static int Find_best_combination(Rel_Queue_Ptr Queue, int *rels, int num) {
+  int min = INT_MAX;
+  for(int i = 0; i < num; i++) {
+    if(Already_in_queue(Queue, rels[i])) continue;
+    if(rels[i] < min) min = rels[i];
+  }
+
+  return min;
+}
+
 Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
   HT Best_Tree;
   int best, num = Get_Num_of_Relations(Parsed_Query);
@@ -165,12 +185,13 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
     Best_Tree.Table[i] = Create_Rel_Queue();
     Insert_Rel_Node(rels[i], Best_Tree.Table[i]);
     printf("%d inserted \n", Best_Tree.Table[i]->head->rel);
+    for(int j = 1; j < num - 1; j++) {
+	  int best = Find_best_combination(Best_Tree.Table[i], rels, num);
+      Insert_Rel_Node(best, Best_Tree.Table[i]);
+	}
+    Print_Rel_Queue(Best_Tree.Table[i]);
   }
-  printf("end\n");
   
- // for(int i = 0; i < num; i++) {
- //   Print_Rel_Queue(Best_Tree.Table[i]);
- // }
   return Best_Tree.Table[0];
 }
 
