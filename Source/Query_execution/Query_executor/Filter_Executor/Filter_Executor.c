@@ -1,11 +1,11 @@
 #include "Filter_Executor.h"
 #include "string.h"
+#include <stdbool.h> 
 
 struct Tuple{
   uint64_t element;
   uint64_t row_id;
 };
-
 
 
 static int Execute(Tuple_Ptr *New, Shell_Ptr Shell, Filter_Ptr Filter, FILE *fp) {
@@ -66,61 +66,105 @@ static int Execute(Tuple_Ptr *New, Shell_Ptr Shell, Filter_Ptr Filter, FILE *fp)
   return cnt;
 }
 
+static float power(float b, uint64_t e) {
+  float ret = 1.0;
+  //printf("%f ^ %llu\n", b, e);
+  for(int i = 0; i < e; i++) {
+    ret *= b;
+  }
+  //printf("ret = %f\n", ret);
+  return ret;
+}
 
-static void Update_Stats(Shell_Ptr Shell, char *type, int col, int con) {
+static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {//char *type, int col, int con) {
+  char *type = Get_Type(Filter);
+  int col = Get_Filter_Column(Filter);
+  int con = Get_Constant(Filter);
 
-  //for(int i =0; i < Get_num_of_columns(Shell); i++){
+//  for(int i =0; i < Get_num_of_columns(Shell); i++){
+//    printf("BEFORE\n");
+//    printf("l = %llu\n", Get_Column_l(Shell, i));
+//    printf("u = %llu\n", Get_Column_u(Shell, i));
+//    printf("f = %llu\n", Get_Column_f(Shell, i));
+//    printf("d = %llu\n", Get_Column_d(Shell, i));
+//  }
+  uint64_t la = Get_Column_l(Shell, col);
+  uint64_t ua = Get_Column_u(Shell, col);
+  uint64_t f, fa = Get_Column_f(Shell, col);
+  uint64_t d, da = Get_Column_d(Shell, col);
+  float fraction;
   switch(*type) {
     case '<':
       printf("<\n");
-      printf("l = %llu\n", Get_Column_l(Shell, col));
-      printf("u = %llu\n", Get_Column_u(Shell, col));
-      printf("f = %llu\n", Get_Column_f(Shell, col));
-      printf("d = %llu\n", Get_Column_d(Shell, col));
-      Set_Column_l(Shell, col, Get_Column_l(Shell, col));
-      Set_Column_u(Shell, col, con);
-      Set_Column_f(Shell, col, Get_Column_f(Shell, col));
-      Set_Column_d(Shell, col, Get_Column_d(Shell, col));
-      printf("AFTER\n");
-      printf("l = %llu\n", Get_Column_l(Shell, col));
-      printf("u = %llu\n", Get_Column_u(Shell, col));
-      printf("f = %llu\n", Get_Column_f(Shell, col));
-      printf("d = %llu\n", Get_Column_d(Shell, col));
+	  fraction = (con - Get_Column_l(Shell, col)) / (float)(ua - Get_Column_l(Shell, col));
+	  f = fraction * fa;
+      for(int i =0; i < Get_num_of_columns(Shell); i++){
+		if(i == col) {
+          Set_Column_u(Shell, col, con);
+		  d = fraction * Get_Column_d(Shell, col);; 
+          Set_Column_d(Shell, col, d);
+		} else {
+		  uint64_t fc = Get_Column_f(Shell, i);
+		  uint64_t dc = Get_Column_d(Shell, i);
+		  float f_fraction = f / (float)fa;
+          float p = power((1 - f_fraction), (fc / dc));
+          Set_Column_d(Shell, i, dc * (1 - p));
+		}
+        Set_Column_f(Shell, i, f);
+	  }
       break;
     case '>':
       printf(">\n");
-      printf("l = %llu\n", Get_Column_l(Shell, col));
-      printf("u = %llu\n", Get_Column_u(Shell, col));
-      printf("f = %llu\n", Get_Column_f(Shell, col));
-      printf("d = %llu\n", Get_Column_d(Shell, col));
-      Set_Column_l(Shell, col, con);
-      Set_Column_u(Shell, col, Get_Column_u(Shell, col));
-      Set_Column_f(Shell, col, Get_Column_f(Shell, col));
-      Set_Column_d(Shell, col, Get_Column_d(Shell, col));
-      printf("AFTER\n");
-      printf("l = %llu\n", Get_Column_l(Shell, col));
-      printf("u = %llu\n", Get_Column_u(Shell, col));
-      printf("f = %llu\n", Get_Column_f(Shell, col));
-      printf("d = %llu\n", Get_Column_d(Shell, col));
+	  fraction = (Get_Column_u(Shell, col) - con) / (float)(Get_Column_u(Shell, col) - la);
+      f = fraction * fa;
+      for(int i =0; i < Get_num_of_columns(Shell); i++){
+		if(i == col) {
+          Set_Column_l(Shell, col, con);
+		  d = fraction * Get_Column_d(Shell, col); 
+          Set_Column_d(Shell, col, d);
+		} else {
+		  uint64_t fc = Get_Column_f(Shell, i);
+		  uint64_t dc = Get_Column_d(Shell, i);
+		  float f_fraction = f / (float)fa;
+          float p = power((1 - f_fraction), (fc / dc));
+          Set_Column_d(Shell, i, dc * (1 - p));
+		}
+        Set_Column_f(Shell, i, f);
+	  }
       break;
     case '=':
       printf("=\n");
-      printf("l = %llu\n", Get_Column_l(Shell, col));
-      printf("u = %llu\n", Get_Column_u(Shell, col));
-      printf("f = %llu\n", Get_Column_f(Shell, col));
-      printf("d = %llu\n", Get_Column_d(Shell, col));
-      Set_Column_l(Shell, col, con);
-      Set_Column_u(Shell, col, con);
-      Set_Column_f(Shell, col, Get_Column_f(Shell, col));
-      Set_Column_d(Shell, col, 1);
-      printf("AFTER\n");
-      printf("l = %llu\n", Get_Column_l(Shell, col));
-      printf("u = %llu\n", Get_Column_u(Shell, col));
-      printf("f = %llu\n", Get_Column_f(Shell, col));
-      printf("d = %llu\n", Get_Column_d(Shell, col));
+	  if(Get_d_array(Shell)[col][0] == true) {
+	    printf("\t\t\tIF\n");
+	    f = (uint64_t)(fa / da);
+		d = 1;
+	  } else {
+	    printf("\t\t\tELSE\n");
+		f = 0; d = 0;
+	  }
+      for(int i =0; i < Get_num_of_columns(Shell); i++){
+		if(i == col) {
+          Set_Column_l(Shell, col, con);
+          Set_Column_u(Shell, col, con);
+          Set_Column_d(Shell, col, d);
+		} else {
+		  uint64_t fc = Get_Column_f(Shell, i);
+		  uint64_t dc = Get_Column_d(Shell, i);
+		  float f_fraction = f / (float)fa;
+          float p = power((1 - f_fraction), (fc / dc));
+          Set_Column_d(Shell, i, dc * (1 - p));
+		}
+        Set_Column_f(Shell, i, f);
+	  }
       break;
   }
- // }
+//  for(int i =0; i < Get_num_of_columns(Shell); i++){
+//    printf("AFTER\n");
+//    printf("l = %llu\n", Get_Column_l(Shell, i));
+//    printf("u = %llu\n", Get_Column_u(Shell, i));
+//    printf("f = %llu\n", Get_Column_f(Shell, i));
+//    printf("d = %llu\n", Get_Column_d(Shell, i));
+//  }
 
 }
 
@@ -136,7 +180,6 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
       Shell_Ptr Shell = Get_Shell_by_index(Get_Table_Array(Table), rel);
       uint64_t num_of_tuples = Get_num_of_tuples(Shell);
       uint64_t num_of_columns = Get_num_of_columns(Shell);
-	  printf("%llu %llu\n", num_of_tuples, num_of_columns);
 
       //allocate array
       Tuple_Ptr *New = (Tuple_Ptr*)malloc(num_of_columns * sizeof(Tuple_Ptr));
@@ -144,6 +187,7 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
       Setup_Column_Pointers(New, num_of_columns, num_of_tuples);
 
       int tuples = Execute(New, Shell, Filter, fp);
+	  printf("%d tuples passed\n", tuples);
 
       //point to the new (smaller) array
       Tuple_Ptr *temp = Get_Shell_Array(Shell);
@@ -152,8 +196,8 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
       free(temp[0]);
       free(temp);
 	  //update shell stats
-	  printf("%llu %llu\n", Get_num_of_tuples(Shell), Get_num_of_columns(Shell));
-	  Update_Stats(Shell, Get_Type(Filter), Get_Filter_Column(Filter), Get_Constant(Filter));
+	  //printf("%llu %llu\n", Get_num_of_tuples(Shell), Get_num_of_columns(Shell));
+	  Update_Stats(Shell, Filter, tuples);//Get_Type(Filter), Get_Filter_Column(Filter), Get_Constant(Filter));
 
 	  //just for checking
 //	  int j = 0;
@@ -177,6 +221,3 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
   }
   printf("QUERY HAS NO FILTERS\n");
 }
-
-
-

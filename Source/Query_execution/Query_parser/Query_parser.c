@@ -82,7 +82,7 @@ Parsed_Query_Ptr Parse_Query(Query_Ptr Query){
 
   //projections
   Setup_Projections(Parsed_Query,Query);
-  Print_Parsed_Query(Parsed_Query);
+//  Print_Parsed_Query(Parsed_Query);
   return Parsed_Query;
 }
 

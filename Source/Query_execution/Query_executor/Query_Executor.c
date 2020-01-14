@@ -15,7 +15,7 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp){
 
   //2.do the preparations
   Execution_Queue_Ptr Queue = Prepare_Execution_Queue(Parsed_Query);
-  Print_Queue(Queue);
+//  Print_Queue(Queue);
   Table_Ptr New_Table = Make_Table_For_Joins(Table,relations,num_of_relations);
 
   //execute filters first

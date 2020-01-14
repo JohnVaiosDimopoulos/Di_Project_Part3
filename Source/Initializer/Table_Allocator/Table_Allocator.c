@@ -24,6 +24,7 @@ struct Shell {
   uint64_t num_of_columns;
   Tuple_Ptr* Array;
   Column_Stats_Ptr stats;
+  bool **d_array;
 };
 
 struct Column_Stats {
@@ -113,6 +114,7 @@ void Allocate_Shell(Shell_Ptr Shell){
   Shell->Array[0]=malloc((Shell->num_of_columns*Shell->num_of_tuples)* sizeof(struct Tuple));
   
   Shell->stats = (Column_Stats_Ptr)malloc(Shell->num_of_columns * sizeof(struct Column_Stats));
+  Shell->d_array = (bool**)malloc(Shell->num_of_columns * sizeof(bool* ));
 }
 
 static void Read_from_File(uint64_t* data ,FILE* fp){
@@ -140,7 +142,8 @@ static void Read_Data(Shell_Ptr Shell,FILE* fp){
   for(int i =0;i<Shell->num_of_columns;i++){
     Shell->stats[i].l = INT_MAX;
     Shell->stats[i].u = 0;
-    Shell->stats[i].d = 5;
+    Shell->stats[i].d = 0;
+
     for(int j=0;j<Shell->num_of_tuples;j++){
       Read_from_File(&Shell->Array[i][j].element, fp);
       Shell->Array[i][j].row_id=j;
@@ -156,27 +159,29 @@ static void Read_Data(Shell_Ptr Shell,FILE* fp){
     }
 	Shell->stats[i].f = Shell->num_of_tuples;
 
-//	uint64_t s = Shell->stats[i].u - Shell->stats[i].l + 1;
-//	uint64_t diff = Shell->stats[i].u;
-//	if(s > N) {
-//      s = N;
-//      diff = Shell->stats[i].l % N;
-//	}
-//
-//	bool *array = (bool*)malloc(s * sizeof(bool)); 
-//	for(int k = 0; k < s; k++) {
-//      array[k] = false;
-//      for(int j = 0; j < Shell->num_of_tuples; j++){
-//	    if(Shell->Array[i][j].element - diff > 0 && Shell->Array[i][j].element - diff < s)
-//          array[Shell->Array[i][j].element - diff] = true;
-//	  }
-//    }
+	uint64_t s = Shell->stats[i].u - Shell->stats[i].l + 1;
+	uint64_t diff = Shell->stats[i].l;
+	if(s > N) {
+      printf("NEVER\n");
+      s = N;
+      diff = Shell->stats[i].l % N;
+	}
+
+	Shell->d_array[i] = (bool*)malloc(s * sizeof(bool));
+    for(int j = 0; j < Shell->num_of_tuples; j++){
+      if(Shell->Array[i][j].element - diff > 0 && 
+		  Shell->Array[i][j].element - diff < s && 
+		  Shell->d_array[i][Shell->Array[i][j].element - diff] != true) {
+        Shell->d_array[i][Shell->Array[i][j].element - diff] = true;
+	    Shell->stats[i].d++;
+	  }
+    }
 
 //	for(int j = 0; j < s; j++) {
-//		if(array[j] == true) printf("POUTSOBANANA\n");
+//		if(Shell->d_array[i][j] == false) printf("FALSE\n");
+//		if(Shell->d_array[i][j] == true) printf("TRUE\n");
 //	}
 
-//    free(array);
   }
 }
 
@@ -221,6 +226,7 @@ Table_Ptr Make_Table_For_Joins(Table_Ptr Relations, int* relations,int num_of_re
     New_Table->Array[i].Array=malloc(num_of_columns* sizeof(Tuple_Ptr));
     New_Table->Array[i].Array[0]=malloc((num_of_columns*num_of_tuples)* sizeof( struct Tuple));
     Setup_Column_Pointers(New_Table->Array[i].Array,num_of_columns,num_of_tuples);
+	//Copy data and row ids
     for(int j =0;j<num_of_columns;j++){
       for(int k=0;k<num_of_tuples;k++){
         New_Table->Array[i].Array[j][k].element = Relations->Array[Original_Shell_index].Array[j][k].element;
@@ -228,12 +234,21 @@ Table_Ptr Make_Table_For_Joins(Table_Ptr Relations, int* relations,int num_of_re
       }
 
     }
+	//Copy stats
 	New_Table->Array[i].stats = (Column_Stats_Ptr)malloc(New_Table->Array[i].num_of_columns * sizeof(struct Column_Stats));
+	New_Table->Array[i].d_array = (bool**)malloc(New_Table->Array[i].num_of_columns * sizeof(bool*));
 	for(int j = 0; j < num_of_columns; j++) {
       New_Table->Array[i].stats[j].l = Relations->Array[Original_Shell_index].stats[j].l;
       New_Table->Array[i].stats[j].u = Relations->Array[Original_Shell_index].stats[j].u;
       New_Table->Array[i].stats[j].f = Relations->Array[Original_Shell_index].stats[j].f;
       New_Table->Array[i].stats[j].d = Relations->Array[Original_Shell_index].stats[j].d;
+
+	  uint64_t s = New_Table->Array[i].stats[j].u - New_Table->Array[i].stats[j].l + 1;
+	  //printf("sizeof = %lu\n", s);
+	  New_Table->Array[i].d_array[j] = (bool*)malloc(s * sizeof(bool));
+	  for(int k = 0; k < s; k++) {
+        New_Table->Array[i].d_array[j][k] = Relations->Array[Original_Shell_index].d_array[j][k];
+      }
 	}
   }
 
@@ -268,6 +283,10 @@ void Fill_Table(Table_Ptr Table, Table_AllocatorPtr Table_Allocator) {
 static void Delete_Shell(struct Shell Shell) {
   free(Shell.Array[0]);
   free(Shell.Array);
+  free(Shell.stats);
+  for(int i = 0; i < Shell.num_of_columns; i++)
+    free(Shell.d_array[i]);
+  free(Shell.d_array);
 }
 
 void Delete_Table(Table_Ptr Table) {
@@ -335,7 +354,7 @@ Tuple_Ptr Get_Column(Shell_Ptr Shell,int column_id){
 
 
 uint64_t Get_Column_l(Shell_Ptr Shell, uint64_t i){
-  printf("from getter %llu %llu\n", Shell->num_of_tuples, Shell->num_of_columns);
+  //printf("from getter %llu %llu\n", Shell->num_of_tuples, Shell->num_of_columns);
   return Shell->stats[i].l;
 }
 
@@ -351,6 +370,10 @@ uint64_t Get_Column_d(Shell_Ptr Shell, uint64_t i){
   return Shell->stats[i].d;
 }
 
+
+bool** Get_d_array(Shell_Ptr Shell){
+  return Shell->d_array;
+}
 
 //Table_Ptr Allocate_Table_with_num_of_Shells(int num_of_shells) {
 //  Table_Ptr Table = (Table_Ptr)malloc(sizeof(Table));
