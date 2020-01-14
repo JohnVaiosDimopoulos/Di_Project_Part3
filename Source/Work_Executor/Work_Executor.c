@@ -82,13 +82,13 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
 	  pthread_join(thread_id[i], NULL);
 
 	  i++; 
-      //break;
+      break;
     }
 	//printf("\t\t\t%d\n", cnt);
     for(int i = 0; i < cnt; i++) {
       //printf("LOCK\n");
-    //  sem_wait(&me);
-	  free(args[i]);
+      //sem_wait(&me);
+	  //free(args[i]);
     }
 	free(args);
     Delete_Batch(Current_Batch);

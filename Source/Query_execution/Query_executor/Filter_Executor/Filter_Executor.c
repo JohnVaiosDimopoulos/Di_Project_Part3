@@ -76,7 +76,7 @@ static float power(float b, uint64_t e) {
   return ret;
 }
 
-static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {//char *type, int col, int con) {
+static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
   char *type = Get_Type(Filter);
   int col = Get_Filter_Column(Filter);
   int con = Get_Constant(Filter);
@@ -197,7 +197,7 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
       free(temp);
 	  //update shell stats
 	  //printf("%llu %llu\n", Get_num_of_tuples(Shell), Get_num_of_columns(Shell));
-	  Update_Stats(Shell, Filter, tuples);//Get_Type(Filter), Get_Filter_Column(Filter), Get_Constant(Filter));
+	  Update_Stats(Shell, Filter, tuples);
 
 	  //just for checking
 //	  int j = 0;
