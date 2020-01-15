@@ -11,4 +11,6 @@ int generic_swap(void*,void*,int);
 const char* construct_Path(const char* , const char*);
 void Tokenize_to_rel_and_col(int *rel, int *col, char *str);
 Tuple_Ptr Allocate_Array(int Array_elements);
+float power(float, uint64_t);
+
 #endif //SORT_JOIN_UTILITIES_H

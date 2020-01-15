@@ -96,3 +96,14 @@ Tuple_Ptr Allocate_Array(int Array_elements){
   }
   return New_Array;
 }
+
+float power(float b, uint64_t e) {
+  float ret = 1.0;
+  //printf("%f ^ %llu\n", b, e);
+  for(int i = 0; i < e; i++) {
+    ret *= b;
+  }
+  //printf("ret = %f\n", ret);
+  return ret;
+}
+

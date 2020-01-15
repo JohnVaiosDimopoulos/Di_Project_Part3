@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 #include "../../Query_parser/Query_parser.h"
+#include "../../../Util/Utilities.h"
 #include "../../../Initializer/Table_Allocator/Table_Allocator.h"
 
 

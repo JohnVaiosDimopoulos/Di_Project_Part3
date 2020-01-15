@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <limits.h>
 
+typedef struct HT {
+  Rel_Queue_Ptr *Table;
+}HT;
+
 struct Rel_Queue{
   struct Rel_Queue_Node* head;
   struct Rel_Queue_Node* tail;
@@ -14,10 +18,6 @@ struct Rel_Queue_Node{
   int rel;
   struct Rel_Queue_Node* next;
 };
-
-typedef struct HT {
-  Rel_Queue_Ptr *Table;
-}HT;
 
 typedef struct Rel_Queue_Node* Rel_Queue_Node_Ptr;
 
@@ -195,21 +195,144 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
   return Best_Tree.Table[0];
 }
 
+///////////////////////////////////////////////////////////////////////////////////
+static void Compute_Join_Stats(Join_Ptr Joins, int num_of_joins, Table_Ptr Table) {
+  Shell_Ptr temp = Get_Table_Array(Table);
+
+  for(int i = 0; i < num_of_joins; i++) {
+    Join_Ptr Join = Get_Join_by_index(Joins, i);
+    
+	if(Is_Self_Join(Join)) continue;
+
+    //get relations and columns
+    int rel1 = Get_Relation_1(Join);
+    int rel2 = Get_Relation_2(Join);
+    Shell_Ptr Shell1 = Get_Shell_by_index(temp, rel1);
+    Shell_Ptr Shell2 = Get_Shell_by_index(temp, rel2);
+    int col1 = Get_Column_1(Join);
+    int col2 = Get_Column_2(Join);
+
+	printf("\n%d.%d = %d.%d\n", rel1, col1, rel2, col2);
+
+    //compute l and u
+    uint64_t u = Get_Column_u(Shell2, col2);
+    if(Get_Column_u(Shell2, col2) > Get_Column_u(Shell1, col1))
+      u = Get_Column_u(Shell1, col1);
+    uint64_t l = Get_Column_l(Shell1, col1);
+    if(Get_Column_l(Shell2, col2) > Get_Column_l(Shell1, col1))
+      l = Get_Column_l(Shell2, col2);
+
+    //compute f and d
+    uint64_t fa = Get_Column_f(Shell1, col1);
+    uint64_t da = Get_Column_d(Shell1, col1);
+    uint64_t fb = Get_Column_f(Shell2, col2);
+    uint64_t db = Get_Column_d(Shell2, col2);
+   
+    uint64_t n = u - l + 1;
+//    printf("fa * fb / n -> %llu * %llu / %llu\n", fa, fb, n);
+    uint64_t f = fa * fb / n;
+//    printf("f -> %llu\n", f);
+
+ //   printf("da * db / n -> %llu * %llu / %llu\n", da, db, n);
+    uint64_t d = da * db / n;
+ //   printf("d -> %llu\n", d);
+
+//    for(int i =0; i < Get_num_of_columns(Shell1); i++){
+//      printf("BEFORE1\n");
+//      printf("l = %llu\n", Get_Column_l(Shell1, i));
+//      printf("u = %llu\n", Get_Column_u(Shell1, i));
+//      printf("f = %llu\n", Get_Column_f(Shell1, i));
+//      printf("d = %llu\n", Get_Column_d(Shell1, i));
+//    }
+//    printf("\n");
+//    for(int i =0; i < Get_num_of_columns(Shell2); i++){
+//      printf("BEFORE2\n");
+//      printf("l = %llu\n", Get_Column_l(Shell2, i));
+//      printf("u = %llu\n", Get_Column_u(Shell2, i));
+//      printf("f = %llu\n", Get_Column_f(Shell2, i));
+//      printf("d = %llu\n", Get_Column_d(Shell2, i));
+//    }
+
+    for(int i = 0; i < Get_num_of_columns(Shell1); i++){
+      if(i == col1) {
+        Set_Column_l(Shell1, col1, l);
+        Set_Column_u(Shell1, col1, u);
+        Set_Column_f(Shell1, col1, f);
+        Set_Column_d(Shell1, col1, d);
+	  } else {
+        Set_Column_f(Shell1, i, f);
+        uint64_t fc = Get_Column_f(Shell1, i);
+        uint64_t dc = Get_Column_d(Shell1, i);
+		float d_fraction = d / (float)da;
+//		printf("dfraction1 = %f\n", d_fraction);
+        float p = power((1 - d_fraction), (fc / dc));
+//		printf("p1 = %f\n", p);
+		uint64_t t = dc * (1 - p);
+//		printf("d = %llu\n", t);
+        Set_Column_d(Shell1, i, dc * (1 - p));
+	  }
+	}
+    for(int i =0; i < Get_num_of_columns(Shell2); i++){
+      if(i == col2) {
+        Set_Column_l(Shell2, col2, l);
+        Set_Column_u(Shell2, col2, u);
+        Set_Column_f(Shell2, col2, f);
+        Set_Column_d(Shell2, col2, d);
+	  } else {
+        Set_Column_f(Shell2, i, f);
+        uint64_t fc = Get_Column_f(Shell2, i);
+        uint64_t dc = Get_Column_d(Shell2, i);
+		float d_fraction = d / (float)db;
+//		printf("dfraction2 = %f\n", d_fraction);
+        float p = power((1 - d_fraction), (fc / dc));
+//		printf("p2 = %f\n", p);
+		uint64_t t = dc * (1 - p);
+//		printf("d = %llu\n", t);
+        Set_Column_d(Shell2, i, dc * (1 - p));
+	  }
+	}
+
+
+    for(int i =0; i < Get_num_of_columns(Shell1); i++){
+      printf("AFTER1\n");
+      printf("l = %llu\n", Get_Column_l(Shell1, i));
+      printf("u = %llu\n", Get_Column_u(Shell1, i));
+      printf("f = %llu\n", Get_Column_f(Shell1, i));
+      printf("d = %llu\n", Get_Column_d(Shell1, i));
+    }
+    printf("\n");
+    for(int i =0; i < Get_num_of_columns(Shell2); i++){
+      printf("AFTER2\n");
+      printf("l = %llu\n", Get_Column_l(Shell2, i));
+      printf("u = %llu\n", Get_Column_u(Shell2, i));
+      printf("f = %llu\n", Get_Column_f(Shell2, i));
+      printf("d = %llu\n", Get_Column_d(Shell2, i));
+    }
+
+  }
+}
+
 ///////////////////////////////////////		TILL HERE		///////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Execution_Queue_Ptr Prepare_Execution_Queue(Parsed_Query_Ptr Parsed_Query){
+Execution_Queue_Ptr Prepare_Execution_Queue(Parsed_Query_Ptr Parsed_Query, Table_Ptr Table){
 
   Execution_Queue_Ptr Execution_Queue=Create_Execution_Queue();
   //1.check for self_joins
   int joins_inserted = 0;
   Check_For_Self_joins(Parsed_Query,Execution_Queue,&joins_inserted);
-  //2.check for joins with  the same column
-  Check_For_Same_Column_joins(Parsed_Query,Execution_Queue,&joins_inserted);
-  //3.make sure that every consecutive join conects
+
+  //2. Compute Join statistics
+  Join_Ptr Joins = Get_Joins(Parsed_Query);
+  int num_of_joins = Get_Num_of_Joins(Parsed_Query);
+  Compute_Join_Stats(Joins, num_of_joins, Table);
+
+  //3.check for joins with  the same column
+  Check_For_Same_Column_joins(Parsed_Query, Execution_Queue, &joins_inserted);
+  //4.make sure that every consecutive join conects
   Organize_Joins(Parsed_Query,Execution_Queue,&joins_inserted);
-  Fill_the_rest(Parsed_Query,Execution_Queue,&joins_inserted);
+  Fill_the_rest(Parsed_Query, Execution_Queue, &joins_inserted);
 
   return Execution_Queue;
 }

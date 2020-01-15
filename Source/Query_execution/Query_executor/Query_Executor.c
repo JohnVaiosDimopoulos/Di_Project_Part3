@@ -5,7 +5,7 @@
 
 
 void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp){
-  printf("\n\nEXECUTE QUERY...\n");
+  printf("EXECUTE QUERY...\n");
 
   //1.Parse the query
   Parsed_Query_Ptr Parsed_Query = Parse_Query(Query);
@@ -18,16 +18,16 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp){
   Execute_Filters(New_Table, Parsed_Query);
 
   //2.do the preparations
-  Rel_Queue_Ptr Queue = Prepare_Rel_Queue(Parsed_Query);
+  //Rel_Queue_Ptr Queue = Prepare_Rel_Queue(Parsed_Query);
   
-  //Execution_Queue_Ptr Queue = Prepare_Execution_Queue(Parsed_Query);
-//  Print_Queue(Queue);
+  Execution_Queue_Ptr Queue = Prepare_Execution_Queue(Parsed_Query, New_Table);
+  //Print_Queue(Queue);
 
   //execute joins
-//  Intermediate_Result_Ptr Res = Execute_Joins(Queue,New_Table,Table,relations);
-//  //Print_Intermediate(Res);
-//
-//  //do projections
+  Intermediate_Result_Ptr Res = Execute_Joins(Queue,New_Table,Table,relations);
+  //Print_Intermediate(Res);
+
+  //do projections
 //  Execute_Projections(Res, Parsed_Query, Table, fp);
 
 //  Delete_Queue(Queue);

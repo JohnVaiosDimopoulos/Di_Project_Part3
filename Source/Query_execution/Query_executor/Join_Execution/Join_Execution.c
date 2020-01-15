@@ -98,6 +98,9 @@ static RelationPtr Make_Relation_From_Intermediate_Array(Table_Ptr Relations,Int
 }
 
 static void Execute_Self_Join(Join_Ptr Join,Table_Ptr Relations) {
+  printf("SELF JOIN...\n");
+  Print_Join(Join);
+  printf("\n");
 
   int relation = Get_Relation_1(Join);
   int column_1 = Get_Column_1(Join);
@@ -429,7 +432,78 @@ static void Execute_Same_Column_Join(Join_Ptr Current_Join,Join_Ptr Last_Join,In
 
 }
 
+
+static void Update_Stats_for_Self_Join(Table_Ptr Table, Join_Ptr Join) {
+
+  int rel = Get_Relation_1(Join);
+  Shell_Ptr temp = Get_Table_Array(Table);
+  Shell_Ptr Shell = Get_Shell_by_index(temp, rel);
+
+//  for(int i =0; i < Get_num_of_columns(Shell); i++){
+//    printf("BEFORE\n");
+//    printf("l = %llu\n", Get_Column_l(Shell, i));
+//    printf("u = %llu\n", Get_Column_u(Shell, i));
+//    printf("f = %llu\n", Get_Column_f(Shell, i));
+//    printf("d = %llu\n", Get_Column_d(Shell, i));
+//  }
+
+  //get columns
+  int col1 = Get_Column_1(Join);
+  int col2 = Get_Column_2(Join);
+
+  //compute l and u
+  uint64_t u = Get_Column_u(Shell, col2);
+  if(Get_Column_u(Shell, col2) > Get_Column_u(Shell, col1))
+    u = Get_Column_u(Shell, col1);
+  uint64_t l = Get_Column_l(Shell, col1);
+  if(Get_Column_l(Shell, col2) > Get_Column_l(Shell, col1))
+    l = Get_Column_l(Shell, col2);
+
+  uint64_t fa = Get_Column_f(Shell, col1);
+  uint64_t da = Get_Column_d(Shell, col1);
+
+  uint64_t n = u - l + 1;
+  printf("fa / n -> %llu / %llu\n", fa, n);
+  float f = fa / (float)n;
+  printf("f -> %f\n", f);
+ 
+  float fraction = f / (float)fa;
+  printf("f / fa -> %f / %llu = %f\n", f, fa, fraction);
+
+  for(int i =0; i < Get_num_of_columns(Shell); i++){
+
+	if(i == col1) {
+      Set_Column_l(Shell, col1, l);
+      Set_Column_u(Shell, col1, u);
+     
+	  float p = power((1 - fraction), (fa / da));
+      Set_Column_d(Shell, i, da * (1 - p));
+	} else if(i  == col2) {
+      Set_Column_l(Shell, col2, l);
+      Set_Column_u(Shell, col2, u);
+     
+	  float p = power((1 - fraction), (fa / da));
+      Set_Column_d(Shell, i, da * (1 - p));
+    } else {
+	  uint64_t fc = Get_Column_f(Shell, i);
+	  uint64_t dc = Get_Column_d(Shell, i);
+	  float p = power((1 - fraction), (fc / dc));
+      Set_Column_d(Shell, i, dc * (1 - p));
+	}
+    Set_Column_f(Shell, i, f);
+  }
+
+//  for(int i =0; i < Get_num_of_columns(Shell); i++){
+//    printf("AFTER\n");
+//    printf("l = %llu\n", Get_Column_l(Shell, i));
+//    printf("u = %llu\n", Get_Column_u(Shell, i));
+//    printf("f = %llu\n", Get_Column_f(Shell, i));
+//    printf("d = %llu\n", Get_Column_d(Shell, i));
+//  }
+}
+
 Intermediate_Result_Ptr Execute_Joins(Execution_Queue_Ptr Execution_Queue, Table_Ptr Filtered_Relations,Table_Ptr Original_Relations,int* relation_map){
+  printf("EXECUTE JOINS...\n");
 
   Intermediate_Result_Ptr Intermediate_Result = Create_Intermediate_Result();
   Join_Ptr Last_Join = NULL;
@@ -439,19 +513,21 @@ Intermediate_Result_Ptr Execute_Joins(Execution_Queue_Ptr Execution_Queue, Table
       Current_Join!=NULL;
       Current_Join=Pop_Next_join(Execution_Queue)){
 
-    if(Is_Self_Join(Current_Join))
+    if(Is_Self_Join(Current_Join)) {
       Execute_Self_Join(Current_Join, Filtered_Relations);
+	  Update_Stats_for_Self_Join(Filtered_Relations, Current_Join);
+	}
 
-    else if(Check_if_relations_already_in_result(Current_Join,Intermediate_Result))
-      Execute_Scan_Join(Current_Join, Intermediate_Result, Original_Relations,relation_map);
-    else if (Is_Same_Column_used(Current_Join,Last_Join)){
-      Execute_Same_Column_Join(Current_Join,Last_Join,Intermediate_Result,Filtered_Relations,Original_Relations,relation_map);
-    }
-    else{
-      Execute_Normal_Join(Current_Join,Intermediate_Result,Filtered_Relations,Original_Relations,relation_map);
-      if(Intermediate_Result->row_ids==NULL)
-        return  NULL;
-    }
+    //else if(Check_if_relations_already_in_result(Current_Join,Intermediate_Result))
+    //  Execute_Scan_Join(Current_Join, Intermediate_Result, Original_Relations,relation_map);
+    //else if (Is_Same_Column_used(Current_Join,Last_Join)){
+    //  Execute_Same_Column_Join(Current_Join,Last_Join,Intermediate_Result,Filtered_Relations,Original_Relations,relation_map);
+    //}
+    //else{
+    //  Execute_Normal_Join(Current_Join,Intermediate_Result,Filtered_Relations,Original_Relations,relation_map);
+    //  if(Intermediate_Result->row_ids==NULL)
+    //    return  NULL;
+    //}
 
     Last_Join=Current_Join;
 

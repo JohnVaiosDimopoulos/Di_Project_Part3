@@ -2,10 +2,10 @@
 #include "string.h"
 #include <stdbool.h> 
 
-struct Tuple{
-  uint64_t element;
-  uint64_t row_id;
-};
+//struct Tuple{
+//  uint64_t element;
+//  uint64_t row_id;
+//};
 
 
 static int Execute(Tuple_Ptr *New, Shell_Ptr Shell, Filter_Ptr Filter, FILE *fp) {
@@ -66,16 +66,6 @@ static int Execute(Tuple_Ptr *New, Shell_Ptr Shell, Filter_Ptr Filter, FILE *fp)
   return cnt;
 }
 
-static float power(float b, uint64_t e) {
-  float ret = 1.0;
-  //printf("%f ^ %llu\n", b, e);
-  for(int i = 0; i < e; i++) {
-    ret *= b;
-  }
-  //printf("ret = %f\n", ret);
-  return ret;
-}
-
 static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
   char *type = Get_Type(Filter);
   int col = Get_Filter_Column(Filter);
@@ -95,7 +85,7 @@ static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
   float fraction;
   switch(*type) {
     case '<':
-      printf("<\n");
+//      printf("<\n");
 	  fraction = (con - Get_Column_l(Shell, col)) / (float)(ua - Get_Column_l(Shell, col));
 	  f = fraction * fa;
       for(int i =0; i < Get_num_of_columns(Shell); i++){
@@ -114,7 +104,7 @@ static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
 	  }
       break;
     case '>':
-      printf(">\n");
+//      printf(">\n");
 	  fraction = (Get_Column_u(Shell, col) - con) / (float)(Get_Column_u(Shell, col) - la);
       f = fraction * fa;
       for(int i =0; i < Get_num_of_columns(Shell); i++){
@@ -127,19 +117,20 @@ static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
 		  uint64_t dc = Get_Column_d(Shell, i);
 		  float f_fraction = f / (float)fa;
           float p = power((1 - f_fraction), (fc / dc));
+//		  printf("p = %f\n", p);
           Set_Column_d(Shell, i, dc * (1 - p));
 		}
         Set_Column_f(Shell, i, f);
 	  }
       break;
     case '=':
-      printf("=\n");
+//      printf("=\n");
 	  if(Get_d_array(Shell)[col][con - la] == true) {
-	    printf("\t\t\tIF\n");
+//	    printf("\t\t\tIF\n");
 	    f = (uint64_t)(fa / da);
 		d = 1;
 	  } else {
-	    printf("\t\t\tELSE\n");
+//	    printf("\t\t\tELSE\n");
 		f = 0; d = 0;
 	  }
       for(int i =0; i < Get_num_of_columns(Shell); i++){
@@ -176,7 +167,6 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
     for (int i = 0; i < num_of_filters; i++) {
       Filter_Ptr Filter = Get_Filter_by_index(Get_Filters(Parsed_Query), i);
       int rel = Get_Filter_Relation(Filter);
-	  printf("REL = %d\n", rel);
       Shell_Ptr Shell = Get_Shell_by_index(Get_Table_Array(Table), rel);
       uint64_t num_of_tuples = Get_num_of_tuples(Shell);
       uint64_t num_of_columns = Get_num_of_columns(Shell);
@@ -187,7 +177,7 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
       Setup_Column_Pointers(New, num_of_columns, num_of_tuples);
 
       int tuples = Execute(New, Shell, Filter, fp);
-	  printf("%d tuples passed\n", tuples);
+//	  printf("%d tuples passed\n", tuples);
 
       //point to the new (smaller) array
       Tuple_Ptr *temp = Get_Shell_Array(Shell);
