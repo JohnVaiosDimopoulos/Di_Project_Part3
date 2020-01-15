@@ -7,6 +7,7 @@
 
 typedef struct HT {
   Rel_Queue_Ptr *Table;
+  int counter;
 }HT;
 
 struct Rel_Queue{
@@ -219,27 +220,70 @@ static int Find_best_combo(Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Query) {
   return min;
 }
 
+static int Exists_better_combo(HT Best_Tree, Rel_Queue_Ptr Current_Queue, int num_of_rel) {
+  Rel_Queue_Ptr *Table = Best_Tree.Table;
+  for(int i = 0; i < Best_Tree.counter; i++) {
+    printf("check %d\n", Table[i]->head->rel);
+    if(Table[i] == Current_Queue) continue;
+    if(Table[i]->head->rel < Current_Queue->head->rel) return 1;
+  }
+  return 0;
+}
+
+static int Choose_Best_Queue(HT Best_Tree) {
+  Rel_Queue_Ptr *Table = Best_Tree.Table;
+  int min = Table[0]->head->rel;
+  int best = 0;
+  for(int i = 1; i < Best_Tree.counter; i++) {
+    if(Table[i]->head->rel < min) {
+      min = Table[i]->head->rel;
+	  best = i;
+	}
+  }
+  return best;
+}
+
 Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
   HT Best_Tree;
+  Best_Tree.counter = 0;
   int best, num_of_rel = Get_Num_of_Relations(Parsed_Query);
   int *Rels = Get_Relations(Parsed_Query);
 
   Best_Tree.Table = (Rel_Queue_Ptr*)malloc(num_of_rel * sizeof(Rel_Queue_Ptr));
   for(int i = 0; i < num_of_rel; i++) {
     Best_Tree.Table[i] = Create_Rel_Queue();
+    Best_Tree.counter++;
     Insert_Rel_Node(Rels[i], Best_Tree.Table[i]);
     printf("%d inserted \n", Best_Tree.Table[i]->head->rel);
     for(int j = 1; j < num_of_rel - 1; j++) {
 	  int best = Find_best_combo(Best_Tree.Table[i], Parsed_Query);
+	  //if(Exists_better_combo(Best_Tree, Best_Tree.Table[i], num_of_rel)) {
+	  //    printf("better combo exists\n");
+	  //    break;
+	  //}
       Insert_Rel_Node(best, Best_Tree.Table[i]);
 	}
     Print_Rel_Queue(Best_Tree.Table[i]);
   }
+  //best = Choose_Best_Queue(Best_Tree);
+  //Print_Rel_Queue(Best_Tree.Table[best]);
   
   return Best_Tree.Table[0];
 }
 
-///////////////////////////////////////////////////////////////////////////////////
+//static void Fill_Execution_Queue(Parsed_Query_Ptr Parsed_Query,\
+//Execution_Queue_Ptr Execution_Queue, Rel_Queue_Ptr Rel_Queue) {
+// 
+//  while(pnode) { 
+//    int rel1 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
+//    int rel2 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
+//
+//    pnode = pnode->next;
+//  }
+//
+//}
+
+/////////////////////////////	STATS	///////////////////////////////////////////
 static void Compute_Join_Stats(Join_Ptr Joins, int num_of_joins, Table_Ptr Table) {
   Shell_Ptr temp = Get_Table_Array(Table);
 
@@ -368,16 +412,20 @@ Execution_Queue_Ptr Prepare_Execution_Queue(Parsed_Query_Ptr Parsed_Query, Table
   int joins_inserted = 0;
   Check_For_Self_joins(Parsed_Query,Execution_Queue,&joins_inserted);
 
+  //Optimizer
+  Rel_Queue_Ptr Rel_Queue = Prepare_Rel_Queue(Parsed_Query);
+  //Fill_Execution_Queue(Parsed_Query, Execution_Queue, Rel_Queue);
+  
   //2. Compute Join statistics
   //Join_Ptr Joins = Get_Joins(Parsed_Query);
   //int num_of_joins = Get_Num_of_Joins(Parsed_Query);
   //Compute_Join_Stats(Joins, num_of_joins, Table);
 
   //3.check for joins with  the same column
-  Check_For_Same_Column_joins(Parsed_Query, Execution_Queue, &joins_inserted);
+  //Check_For_Same_Column_joins(Parsed_Query, Execution_Queue, &joins_inserted);
   //4.make sure that every consecutive join conects
-  Organize_Joins(Parsed_Query,Execution_Queue,&joins_inserted);
-  Fill_the_rest(Parsed_Query, Execution_Queue, &joins_inserted);
+  //Organize_Joins(Parsed_Query,Execution_Queue,&joins_inserted);
+  //Fill_the_rest(Parsed_Query, Execution_Queue, &joins_inserted);
 
   return Execution_Queue;
 }
