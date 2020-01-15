@@ -75,7 +75,6 @@ static void Organize_Joins(Parsed_Query_Ptr Parsed_Query,Execution_Queue_Ptr Exe
       Insert_Node(Current_Join,Execution_Queue);
       (*joins_inserted)++;
     }
-
   }
 }
 
@@ -180,7 +179,13 @@ static int Exists_Join(Join_Ptr Join, int rel1, int rel2, int num_of_joins) {
   return 0;
 }
 
-static int Connected(int rel1, Rel_Queue_Ptr Queue, int *Rels, int num_of_rel, Join_Ptr Joins, int num_of_joins) {
+static int Connected(int rel1, Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Query) {
+  int num_of_rel = Get_Num_of_Relations(Parsed_Query);
+  int *Rels = Get_Relations(Parsed_Query);
+
+  Join_Ptr Joins = Get_Joins(Parsed_Query);
+  int num_of_joins = Get_Num_of_Joins(Parsed_Query);
+
   //printf("->relative value %d with\n", rel1);
   Rel_Queue_Node_Ptr pnode = Queue->head;
   while(pnode) {
@@ -196,12 +201,15 @@ static int Connected(int rel1, Rel_Queue_Ptr Queue, int *Rels, int num_of_rel, J
   return 0;
 }
 
-static int Find_best_combo(Rel_Queue_Ptr Queue, int *Rels, int num_of_rel, Join_Ptr Joins, int num_of_joins) {
+static int Find_best_combo(Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Query) {
+  int num_of_rel = Get_Num_of_Relations(Parsed_Query);
+  int *Rels = Get_Relations(Parsed_Query);
+
   int min = INT_MAX;
   for(int i = 0; i < num_of_rel; i++) {
     if(Already_in_queue(Queue, Rels[i])) continue;
     //printf("check %d", Rels[i]);
-	if(Connected(i, Queue, Rels, num_of_rel, Joins, num_of_joins)) {
+	if(Connected(i, Queue, Parsed_Query)) {
 	  //printf("%d is connected with some rel from queue\n", i);
       if(Rels[i] < min) min = Rels[i];
 	}
@@ -215,8 +223,6 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
   HT Best_Tree;
   int best, num_of_rel = Get_Num_of_Relations(Parsed_Query);
   int *Rels = Get_Relations(Parsed_Query);
-  Join_Ptr Joins = Get_Joins(Parsed_Query);
-  int num_of_joins = Get_Num_of_Joins(Parsed_Query);
 
   Best_Tree.Table = (Rel_Queue_Ptr*)malloc(num_of_rel * sizeof(Rel_Queue_Ptr));
   for(int i = 0; i < num_of_rel; i++) {
@@ -224,7 +230,7 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
     Insert_Rel_Node(Rels[i], Best_Tree.Table[i]);
     printf("%d inserted \n", Best_Tree.Table[i]->head->rel);
     for(int j = 1; j < num_of_rel - 1; j++) {
-	  int best = Find_best_combo(Best_Tree.Table[i], Rels, num_of_rel, Joins, num_of_joins);
+	  int best = Find_best_combo(Best_Tree.Table[i], Parsed_Query);
       Insert_Rel_Node(best, Best_Tree.Table[i]);
 	}
     Print_Rel_Queue(Best_Tree.Table[i]);
@@ -375,5 +381,3 @@ Execution_Queue_Ptr Prepare_Execution_Queue(Parsed_Query_Ptr Parsed_Query, Table
 
   return Execution_Queue;
 }
-
-
