@@ -543,12 +543,13 @@ Execution_Queue_Ptr Prepare_Execution_Queue(Parsed_Query_Ptr Parsed_Query, Table
   int r = Get_Num_of_Relations(Parsed_Query);
 
   Execution_Queue_Ptr Execution_Queue=Create_Execution_Queue();
+
   //1.check for self_joins
   int joins_inserted = 0;
   Check_For_Self_joins(Parsed_Query,Execution_Queue,&joins_inserted);
   //Print_Queue(Execution_Queue);
 
-  //Optimizer
+  //2.Optimizer
   Rel_Queue_Ptr Rel_Queue = Prepare_Rel_Queue(Parsed_Query, Table);
   Fill_Execution_Queue(Parsed_Query, Execution_Queue, Rel_Queue);
   Print_Queue(Execution_Queue);
