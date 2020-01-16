@@ -101,7 +101,9 @@ static void Fill_the_rest(Parsed_Query_Ptr Parsed_Query,Execution_Queue_Ptr Exec
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 static void Print_Rel_Queue(Rel_Queue_Ptr Rel_Queue){
+  if(!Rel_Queue) return;
   printf("===REL QUEUE===\n");
+
   Rel_Queue_Node_Ptr temp = Rel_Queue->head;
   while (temp!=NULL){
     printf("(%d)->", temp->rel);
@@ -170,8 +172,9 @@ static int Find_Relative_Value(int *Rels, int original_value, int num_of_rel) {
     if(Rels[i] == original_value) return i;
 }
 
-static int Exists_Join(Join_Ptr Join, int rel1, int rel2, int num_of_joins) {
+static int Exists_Join(Join_Ptr Joins, int rel1, int rel2, int num_of_joins) {
   for(int i = 0; i < num_of_joins; i++) {
+    Join_Ptr Join = Get_Join_by_index(Joins, i);
     if(rel1 == Get_Relation_1(Join) && rel2 == Get_Relation_2(Join))
       return 1;
     if(rel2 == Get_Relation_1(Join) && rel1 == Get_Relation_2(Join))
@@ -187,18 +190,23 @@ static int Connected(int rel1, Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Quer
   Join_Ptr Joins = Get_Joins(Parsed_Query);
   int num_of_joins = Get_Num_of_Joins(Parsed_Query);
 
-  //printf("->relative value %d with\n", rel1);
+  //find two last rels
   Rel_Queue_Node_Ptr pnode = Queue->head;
-  while(pnode) {
+  if(pnode->next) {
+    while(pnode->next!= Queue->tail) {
+      pnode = pnode->next;
+    }
     int rel2 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
-    //printf("%d->relative value %d\n", pnode->rel, rel2);
-    for(int i = 0; i < num_of_joins; i++) {
-      Join_Ptr Current_Join = Get_Join_by_index(Joins, i);
-      if(Exists_Join(Current_Join, rel1, rel2, num_of_joins)) return 1; 
-	}
-    pnode = pnode->next;
-  }
+    int rel3 = Find_Relative_Value(Rels, pnode->next->rel, num_of_rel);
+    if(!Exists_Join(Joins, rel2, rel3, num_of_joins)) return 0; 
 
+    if(Exists_Join(Joins, rel1, rel2, num_of_joins)) return 1; 
+    if(Exists_Join(Joins, rel1, rel3, num_of_joins)) return 1; 
+  //only one node
+  } else {
+      int rel2 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
+      if(Exists_Join(Joins, rel1, rel2, num_of_joins)) return 1; 
+  }
   return 0;
 }
 
@@ -220,22 +228,39 @@ static int Find_best_combo(Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Query) {
   return min;
 }
 
+static Rel_Queue_Ptr Push_last_rel(Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Query) {
+  if(Queue == NULL) return NULL;
+  int num_of_rel = Get_Num_of_Relations(Parsed_Query);
+  int *Rels = Get_Relations(Parsed_Query);
+
+  for(int i = 0; i < num_of_rel; i++) {
+    if(Already_in_queue(Queue, Rels[i])) continue;
+	if(Connected(i, Queue, Parsed_Query)) {
+      Insert_Rel_Node(Rels[i], Queue);
+	  return Queue;
+    }
+  }
+  return NULL;
+}
+
 static int Exists_better_combo(HT Best_Tree, Rel_Queue_Ptr Current_Queue, int num_of_rel) {
   Rel_Queue_Ptr *Table = Best_Tree.Table;
   for(int i = 0; i < Best_Tree.counter; i++) {
-    printf("check %d\n", Table[i]->head->rel);
-    if(Table[i] == Current_Queue) continue;
-    if(Table[i]->head->rel < Current_Queue->head->rel) return 1;
+	if(Table[i]) {
+    //  printf("check %d\n", Table[i]->head->rel);
+      if(Table[i] == Current_Queue) continue;
+      if(Table[i]->head->rel < Current_Queue->head->rel) return 1;
+	}
   }
   return 0;
 }
 
 static int Choose_Best_Queue(HT Best_Tree) {
   Rel_Queue_Ptr *Table = Best_Tree.Table;
-  int min = Table[0]->head->rel;
+  int min = INT_MAX;
   int best = 0;
-  for(int i = 1; i < Best_Tree.counter; i++) {
-    if(Table[i]->head->rel < min) {
+  for(int i = 0; i < Best_Tree.counter; i++) {
+    if(Table[i] && Table[i]->head->rel < min) {
       min = Table[i]->head->rel;
 	  best = i;
 	}
@@ -251,22 +276,37 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
 
   Best_Tree.Table = (Rel_Queue_Ptr*)malloc(num_of_rel * sizeof(Rel_Queue_Ptr));
   for(int i = 0; i < num_of_rel; i++) {
+	int found_better = 0;
     Best_Tree.Table[i] = Create_Rel_Queue();
     Best_Tree.counter++;
     Insert_Rel_Node(Rels[i], Best_Tree.Table[i]);
     printf("%d inserted \n", Best_Tree.Table[i]->head->rel);
+
+	//find all possible paths
     for(int j = 1; j < num_of_rel - 1; j++) {
 	  int best = Find_best_combo(Best_Tree.Table[i], Parsed_Query);
-	  //if(Exists_better_combo(Best_Tree, Best_Tree.Table[i], num_of_rel)) {
-	  //    printf("better combo exists\n");
-	  //    break;
-	  //}
       Insert_Rel_Node(best, Best_Tree.Table[i]);
+	  //if we have already found a better combination to start with
+	  //delete this one
+	  if(Exists_better_combo(Best_Tree, Best_Tree.Table[i], num_of_rel)) {
+	    printf("better combo exists\n");
+	    found_better = 1;
+	    Delete_Rel_Queue(Best_Tree.Table[i]);
+        Best_Tree.Table[i] = NULL;
+	    break;
+	  }
 	}
-    Print_Rel_Queue(Best_Tree.Table[i]);
+	if(found_better) continue;
+    if(!Push_last_rel(Best_Tree.Table[i], Parsed_Query)) {
+	  //printf("not possible path\n");
+	  Delete_Rel_Queue(Best_Tree.Table[i]);
+      Best_Tree.Table[i] = NULL;
+	}
+    //Print_Rel_Queue(Best_Tree.Table[i]);
   }
-  //best = Choose_Best_Queue(Best_Tree);
-  //Print_Rel_Queue(Best_Tree.Table[best]);
+  best = Choose_Best_Queue(Best_Tree);
+  printf("BEST\n");
+  Print_Rel_Queue(Best_Tree.Table[best]);
   
   return Best_Tree.Table[0];
 }
