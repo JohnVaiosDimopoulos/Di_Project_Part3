@@ -22,7 +22,7 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp){
   //Print_Queue(Queue);
 
   //execute joins
-  //Intermediate_Result_Ptr Res = Execute_Joins(Queue,New_Table,Table,relations);
+  Intermediate_Result_Ptr Res = Execute_Joins(Queue,New_Table,Table,relations);
   //Print_Intermediate(Res);
 
   //do projections

@@ -459,16 +459,16 @@ static void Update_Stats_for_Self_Join(Table_Ptr Table, Join_Ptr Join) {
   if(Get_Column_l(Shell, col2) > Get_Column_l(Shell, col1))
     l = Get_Column_l(Shell, col2);
 
-  uint64_t fa = Get_Column_f(Shell, col1);
-  uint64_t da = Get_Column_d(Shell, col1);
+  int64_t fa = Get_Column_f(Shell, col1);
+  int64_t da = Get_Column_d(Shell, col1);
 
   uint64_t n = u - l + 1;
-  printf("fa / n -> %llu / %llu\n", fa, n);
-  float f = fa / (float)n;
-  printf("f -> %f\n", f);
+  printf("fa / n -> %lu / %llu\n", fa, n);
+  int64_t f = fa / (float)n;
+  printf("f -> %lu\n", f);
  
   float fraction = f / (float)fa;
-  printf("f / fa -> %f / %llu = %f\n", f, fa, fraction);
+  printf("f / fa -> %lu / %llu = %f\n", f, fa, fraction);
 
   for(int i =0; i < Get_num_of_columns(Shell); i++){
 
@@ -485,8 +485,8 @@ static void Update_Stats_for_Self_Join(Table_Ptr Table, Join_Ptr Join) {
 	  float p = power((1 - fraction), (fa / da));
       Set_Column_d(Shell, i, da * (1 - p));
     } else {
-	  uint64_t fc = Get_Column_f(Shell, i);
-	  uint64_t dc = Get_Column_d(Shell, i);
+	  int64_t fc = Get_Column_f(Shell, i);
+	  int64_t dc = Get_Column_d(Shell, i);
 	  float p = power((1 - fraction), (fc / dc));
       Set_Column_d(Shell, i, dc * (1 - p));
 	}

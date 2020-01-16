@@ -80,8 +80,8 @@ static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
 //  }
   uint64_t la = Get_Column_l(Shell, col);
   uint64_t ua = Get_Column_u(Shell, col);
-  uint64_t f, fa = Get_Column_f(Shell, col);
-  uint64_t d, da = Get_Column_d(Shell, col);
+  int64_t f, fa = Get_Column_f(Shell, col);
+  int64_t d, da = Get_Column_d(Shell, col);
   float fraction;
   switch(*type) {
     case '<':
@@ -94,8 +94,8 @@ static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
 		  d = fraction * Get_Column_d(Shell, col);; 
           Set_Column_d(Shell, col, d);
 		} else {
-		  uint64_t fc = Get_Column_f(Shell, i);
-		  uint64_t dc = Get_Column_d(Shell, i);
+		  int64_t fc = Get_Column_f(Shell, i);
+		  int64_t dc = Get_Column_d(Shell, i);
 		  float f_fraction = f / (float)fa;
           float p = power((1 - f_fraction), (fc / dc));
           Set_Column_d(Shell, i, dc * (1 - p));
@@ -113,8 +113,8 @@ static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
 		  d = fraction * Get_Column_d(Shell, col); 
           Set_Column_d(Shell, col, d);
 		} else {
-		  uint64_t fc = Get_Column_f(Shell, i);
-		  uint64_t dc = Get_Column_d(Shell, i);
+		  int64_t fc = Get_Column_f(Shell, i);
+		  int64_t dc = Get_Column_d(Shell, i);
 		  float f_fraction = f / (float)fa;
           float p = power((1 - f_fraction), (fc / dc));
 //		  printf("p = %f\n", p);
@@ -127,7 +127,7 @@ static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
 //      printf("=\n");
 	  if(Get_d_array(Shell)[col][con - la] == true) {
 //	    printf("\t\t\tIF\n");
-	    f = (uint64_t)(fa / da);
+	    f = (int64_t)(fa / da);
 		d = 1;
 	  } else {
 //	    printf("\t\t\tELSE\n");
@@ -139,8 +139,8 @@ static void Update_Stats(Shell_Ptr Shell, Filter_Ptr Filter, int tuples) {
           Set_Column_u(Shell, col, con);
           Set_Column_d(Shell, col, d);
 		} else {
-		  uint64_t fc = Get_Column_f(Shell, i);
-		  uint64_t dc = Get_Column_d(Shell, i);
+		  int64_t fc = Get_Column_f(Shell, i);
+		  int64_t dc = Get_Column_d(Shell, i);
 		  float f_fraction = f / (float)fa;
           float p = power((1 - f_fraction), (fc / dc));
           Set_Column_d(Shell, i, dc * (1 - p));

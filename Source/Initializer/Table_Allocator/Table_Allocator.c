@@ -30,8 +30,8 @@ struct Shell {
 struct Column_Stats {
   uint64_t l;
   uint64_t u;
-  uint64_t f;
-  uint64_t d;
+  int64_t f;
+  int64_t d;
 };
 
 Table_AllocatorPtr Create_Table_Allocator(Argument_Data_Ptr Data){
@@ -88,7 +88,7 @@ static char* Get_File_Name(char* line_buffer, int size) {
 static void Print_Shell(Shell_Ptr Shell, FILE *fp) {
   fprintf(fp, "sizes: %llu %llu\n", Shell->num_of_tuples, Shell->num_of_columns);
   for(int i = 0; i < Shell->num_of_columns; i++)
-    fprintf(fp, "stats: l = %llu u = %llu f = %llu d = %llu\n", Shell->stats[i].l, Shell->stats[i].u, Shell->stats[i].f, Shell->stats[i].d);
+    fprintf(fp, "stats: l = %llu u = %llu f = %lu d = %lu\n", Shell->stats[i].l, Shell->stats[i].u, Shell->stats[i].f, Shell->stats[i].d);
   fprintf(fp, "\n");
   for(int i =0;i<Shell->num_of_tuples;i++){
     for(int j =0;j<Shell->num_of_columns;j++) {
@@ -306,10 +306,10 @@ void Set_Column_l(Shell_Ptr Shell, uint64_t i, uint64_t l){
 void Set_Column_u(Shell_Ptr Shell, uint64_t i, uint64_t u){
   Shell->stats[i].u = u;
 }
-void Set_Column_f(Shell_Ptr Shell, uint64_t i, uint64_t f){
+void Set_Column_f(Shell_Ptr Shell, uint64_t i, int64_t f){
   Shell->stats[i].f = f;
 }
-void Set_Column_d(Shell_Ptr Shell, uint64_t i, uint64_t d){
+void Set_Column_d(Shell_Ptr Shell, uint64_t i, int64_t d){
   Shell->stats[i].d = d;
 }
 
@@ -362,11 +362,11 @@ uint64_t Get_Column_u(Shell_Ptr Shell, uint64_t i){
   return Shell->stats[i].u;
 }
 
-uint64_t Get_Column_f(Shell_Ptr Shell, uint64_t i){
+int64_t Get_Column_f(Shell_Ptr Shell, uint64_t i){
   return Shell->stats[i].f;
 }
 
-uint64_t Get_Column_d(Shell_Ptr Shell, uint64_t i){
+int64_t Get_Column_d(Shell_Ptr Shell, uint64_t i){
   return Shell->stats[i].d;
 }
 
