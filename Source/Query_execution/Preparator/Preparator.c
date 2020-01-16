@@ -112,6 +112,8 @@ static void Print_Rel_Queue(Rel_Queue_Ptr Rel_Queue){
   printf("\n\n");
 }
 static void Delete_Rel_Queue(Rel_Queue_Ptr Rel_Queue){
+  if(Rel_Queue == NULL) return;
+
   Rel_Queue_Node_Ptr current = Rel_Queue->head;
   Rel_Queue->head=NULL;
   Rel_Queue->tail=NULL;
@@ -172,15 +174,15 @@ static int Find_Relative_Value(int *Rels, int original_value, int num_of_rel) {
     if(Rels[i] == original_value) return i;
 }
 
-static int Exists_Join(Join_Ptr Joins, int rel1, int rel2, int num_of_joins) {
+static Join_Ptr Find_Join(Join_Ptr Joins, int rel1, int rel2, int num_of_joins) {
   for(int i = 0; i < num_of_joins; i++) {
     Join_Ptr Join = Get_Join_by_index(Joins, i);
     if(rel1 == Get_Relation_1(Join) && rel2 == Get_Relation_2(Join))
-      return 1;
+      return Join;
     if(rel2 == Get_Relation_1(Join) && rel1 == Get_Relation_2(Join))
-      return 1;
+      return Join;
   }
-  return 0;
+  return NULL;
 }
 
 static int Connected(int rel1, Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Query) {
@@ -198,14 +200,14 @@ static int Connected(int rel1, Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Quer
     }
     int rel2 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
     int rel3 = Find_Relative_Value(Rels, pnode->next->rel, num_of_rel);
-    if(!Exists_Join(Joins, rel2, rel3, num_of_joins)) return 0; 
+    if(!Find_Join(Joins, rel2, rel3, num_of_joins)) return 0; 
 
-    if(Exists_Join(Joins, rel1, rel2, num_of_joins)) return 1; 
-    if(Exists_Join(Joins, rel1, rel3, num_of_joins)) return 1; 
+    if(Find_Join(Joins, rel1, rel2, num_of_joins)) return 1; 
+    if(Find_Join(Joins, rel1, rel3, num_of_joins)) return 1; 
   //only one node
   } else {
       int rel2 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
-      if(Exists_Join(Joins, rel1, rel2, num_of_joins)) return 1; 
+      if(Find_Join(Joins, rel1, rel2, num_of_joins)) return 1; 
   }
   return 0;
 }
@@ -280,7 +282,7 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
     Best_Tree.Table[i] = Create_Rel_Queue();
     Best_Tree.counter++;
     Insert_Rel_Node(Rels[i], Best_Tree.Table[i]);
-    printf("%d inserted \n", Best_Tree.Table[i]->head->rel);
+    //printf("%d inserted \n", Best_Tree.Table[i]->head->rel);
 
 	//find all possible paths
     for(int j = 1; j < num_of_rel - 1; j++) {
@@ -289,7 +291,7 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
 	  //if we have already found a better combination to start with
 	  //delete this one
 	  if(Exists_better_combo(Best_Tree, Best_Tree.Table[i], num_of_rel)) {
-	    printf("better combo exists\n");
+	    //printf("better combo exists\n");
 	    found_better = 1;
 	    Delete_Rel_Queue(Best_Tree.Table[i]);
         Best_Tree.Table[i] = NULL;
@@ -306,22 +308,51 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query){
   }
   best = Choose_Best_Queue(Best_Tree);
   printf("BEST\n");
-  Print_Rel_Queue(Best_Tree.Table[best]);
+  for(int i = 0; i < Best_Tree.counter; i++) {
+    if(i != best) {
+      Delete_Rel_Queue(Best_Tree.Table[i]);
+      Best_Tree.Table[i] = NULL;
+    }
+  }
+  //Print_Rel_Queue(Best_Tree.Table[best]);
   
-  return Best_Tree.Table[0];
+  return Best_Tree.Table[best];
 }
 
-//static void Fill_Execution_Queue(Parsed_Query_Ptr Parsed_Query,\
-//Execution_Queue_Ptr Execution_Queue, Rel_Queue_Ptr Rel_Queue) {
-// 
-//  while(pnode) { 
-//    int rel1 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
-//    int rel2 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
-//
-//    pnode = pnode->next;
-//  }
-//
-//}
+
+static void Fill_Execution_Queue(Parsed_Query_Ptr Parsed_Query,\
+Execution_Queue_Ptr Execution_Queue, Rel_Queue_Ptr Rel_Queue) {
+  int *Rels = Get_Relations(Parsed_Query);
+  int num_of_rel = Get_Num_of_Relations(Parsed_Query);
+
+  Print_Rel_Queue(Rel_Queue);
+  Rel_Queue_Node_Ptr pnode = Rel_Queue->head;
+ 
+  Join_Ptr Joins = Get_Joins(Parsed_Query);
+  int num_of_joins = Get_Num_of_Joins(Parsed_Query);
+
+  int prev;
+  while(pnode && pnode->next) { 
+    int rel1 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
+    int rel2 = Find_Relative_Value(Rels, pnode->next->rel, num_of_rel);
+	
+    Join_Ptr Join;
+	while(1) {
+	  //printf("JOIN: %d = %d\n", rel1, rel2);
+	  Join = Find_Join(Joins, rel1, rel2, num_of_joins);
+	  if(Join) break;
+	  rel1 = prev;
+	}
+    Print_Join(Join);
+	printf("\n");
+    Insert_Node(Join, Execution_Queue);
+
+    pnode = pnode->next;
+    prev = rel1;
+  }
+  //printf("END\n");
+
+}
 
 /////////////////////////////	STATS	///////////////////////////////////////////
 static void Compute_Join_Stats(Join_Ptr Joins, int num_of_joins, Table_Ptr Table) {
@@ -454,7 +485,8 @@ Execution_Queue_Ptr Prepare_Execution_Queue(Parsed_Query_Ptr Parsed_Query, Table
 
   //Optimizer
   Rel_Queue_Ptr Rel_Queue = Prepare_Rel_Queue(Parsed_Query);
-  //Fill_Execution_Queue(Parsed_Query, Execution_Queue, Rel_Queue);
+  Fill_Execution_Queue(Parsed_Query, Execution_Queue, Rel_Queue);
+  Print_Queue(Execution_Queue);
   
   //2. Compute Join statistics
   //Join_Ptr Joins = Get_Joins(Parsed_Query);
