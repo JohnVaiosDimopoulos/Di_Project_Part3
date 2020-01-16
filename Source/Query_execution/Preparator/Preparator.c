@@ -222,6 +222,8 @@ static int Find_best_combo(Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Query) {
     //printf("check %d", Rels[i]);
 	if(Connected(i, Queue, Parsed_Query)) {
 	  //printf("%d is connected with some rel from queue\n", i);
+	  //THIS PART MUST CHANGE
+	  //REGARDING STATISTICS
       if(Rels[i] < min) min = Rels[i];
 	}
 	else continue;
@@ -251,6 +253,8 @@ static int Exists_better_combo(HT Best_Tree, Rel_Queue_Ptr Current_Queue, int nu
 	if(Table[i]) {
     //  printf("check %d\n", Table[i]->head->rel);
       if(Table[i] == Current_Queue) continue;
+	  //THIS PART MUST CHANGE
+	  //REGARDING STATISTICS
       if(Table[i]->head->rel < Current_Queue->head->rel) return 1;
 	}
   }
@@ -262,6 +266,8 @@ static int Choose_Best_Queue(HT Best_Tree) {
   int min = INT_MAX;
   int best = 0;
   for(int i = 0; i < Best_Tree.counter; i++) {
+	//THIS PART MUST CHANGE
+	//REGARDING STATISTICS
     if(Table[i] && Table[i]->head->rel < min) {
       min = Table[i]->head->rel;
 	  best = i;
