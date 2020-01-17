@@ -12,7 +12,7 @@ int main(int argc, char** argv){
   Table_AllocatorPtr Table_Allocator = Create_Table_Allocator(Arg_Data);
   Table_Ptr Table = Allocate_Table(Table_Allocator);
   Fill_Table(Table, Table_Allocator);
-//  Print_Table(Table);
+  Print_Table(Table);
 
   Start_Work(Table, Arg_Data);
 

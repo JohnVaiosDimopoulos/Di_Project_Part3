@@ -26,7 +26,7 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp){
   //Print_Intermediate(Res);
 
   //do projections
-//  Execute_Projections(Res, Parsed_Query, Table, fp);
+  //Execute_Projections(Res, Parsed_Query, Table, fp);
 
 //  Delete_Queue(Queue);
 //  Delete_Parsed_Query(Parsed_Query);

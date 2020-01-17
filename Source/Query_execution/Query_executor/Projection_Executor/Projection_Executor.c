@@ -58,4 +58,5 @@ void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr Parsed_Qu
 
     } else fprintf(fp, "NULL ");
   }
+  fprintf(fp, "\n");
 }
