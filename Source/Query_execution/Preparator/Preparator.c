@@ -14,6 +14,7 @@ struct Rel_Queue{
   struct Rel_Queue_Node* head;
   struct Rel_Queue_Node* tail;
   int64_t f;
+  int *Rels_already_passed;
 };
 
 struct Rel_Queue_Node{
@@ -127,58 +128,77 @@ static void Print_Rel_Queue(Rel_Queue_Ptr Rel_Queue){
   printf("\n\n");
 }
 
-/////////////////////////////	STATS	///////////////////////////////////////////
-//TODO: COMPARE TEMP STATS NOT THE ORIGINAL ONES 
-static int64_t Compute_Join_Stats(Join_Ptr Join, Table_Ptr Table) {
-  Shell_Ptr temp = Get_Table_Array(Table);
-  
-  if(Is_Self_Join(Join)) return -1;
+static int Find_Relative_Value(int *Rels, int original_value, int num_of_rel) {
+  for(int i = 0; i < num_of_rel; i++)
+    if(Rels[i] == original_value) return i;
+}
 
+/////////////////////////////	STATS	///////////////////////////////////////////
+static int64_t Compute_Join_Stats(Join_Ptr Join, Table_Ptr Table, \
+Rel_Queue_Ptr Queue, int *Rels, int num_of_rel) {
+  if(Is_Self_Join(Join)) return -1;
+  
   //get relations and columns
   int rel1 = Get_Relation_1(Join);
   int rel2 = Get_Relation_2(Join);
-  Shell_Ptr Shell1 = Get_Shell_by_index(temp, rel1);
-  Shell_Ptr Shell2 = Get_Shell_by_index(temp, rel2);
   int col1 = Get_Column_1(Join);
   int col2 = Get_Column_2(Join);
 
   //printf("%d.%d = %d.%d\n", rel1, col1, rel2, col2);
+  //printf("ORIGINAL\n");
+  Rel_Queue_Node_Ptr pnode = Queue->tail;
 
+  //make sure they are in the correct order
+  if(pnode->rel != rel1) {
+	//swap rels and columns
+    int temp = rel1;
+	rel1 = rel2;
+	rel2 = temp;
+	temp = col1;
+	col1 = col2;
+	col2 = temp;
+  }
+  Shell_Ptr Shell = Get_Table_Array(Table);
+  Shell_Ptr Shell_i = Get_Shell_by_index(Shell, rel2);
+  //printf("%d = ...\n", pnode->rel);
+  
+  //compute l and u
+  uint64_t u = Get_Column_u(Shell_i, col2);
+  if(u > pnode->stats[col1].u)
+    u = pnode->stats[col1].u;
+  uint64_t l = Get_Column_l(Shell_i, col2);
+  if(pnode->stats[col1].l > l)
+    l = pnode->stats[col1].l;
 
-  //compute new l and new u
-  uint64_t u = Get_Column_u(Shell2, col2);
-  if(Get_Column_u(Shell2, col2) > Get_Column_u(Shell1, col1))
-    u = Get_Column_u(Shell1, col1);
-  uint64_t l = Get_Column_l(Shell1, col1);
-  if(Get_Column_l(Shell2, col2) > Get_Column_l(Shell1, col1))
-    l = Get_Column_l(Shell2, col2);
+  //get f
+  int64_t fa = pnode->stats[col1].f;
+  int64_t fb = Get_Column_f(Shell_i, col2);
+ 
+  //compute new f
   uint64_t n = u - l + 1;
-
-  //compute f
-  int64_t fa = Get_Column_f(Shell1, col1);
-  int64_t fb = Get_Column_f(Shell2, col2);
 //  printf("fa * fb / n -> %llu * %llu / %llu\n", fa, fb, n);
-  int64_t f = fa * fb / n;
+  int64_t f = 0;
+  if(fa && fb) f = fa * fb / n;
   //printf("f -> %lu\n", f);
 
   return f;
 }
 
-static void Find_two_last(Rel_Queue_Ptr Queue, Rel_Queue_Node_Ptr *last, Rel_Queue_Node_Ptr *prev) {
+static Rel_Queue_Node_Ptr Find_Join_Rel(Rel_Queue_Ptr Queue, int rel1, int rel2) {
   Rel_Queue_Node_Ptr pnode = Queue->head ;
-  while(pnode->next != Queue->tail) {
+  while(pnode && pnode->rel != rel1 && pnode->rel != rel2) {
+  //while(pnode->next != Queue->tail) {
     pnode = pnode->next;
   }
-  *prev = pnode;
-  *last = pnode->next;
+  return pnode;
+  //*prev = pnode;
+  //*last = Queue->tail;
 }
 
-//static void Update_Join_Stats(Join_Ptr Join, Table_Ptr Table) {
-static void Update_Join_Stats(Join_Ptr Join, Rel_Queue_Ptr Queue) {
+static void Update_Join_Stats(Join_Ptr Join, Rel_Queue_Ptr Queue, int *Rels, int num_of_rel) {
   //Print_Rel_Queue(Queue);
   if(Is_Self_Join(Join)) return;
   printf("\nUPDATE\n");
-
 
   //get relations and columns
   int rel1 = Get_Relation_1(Join);
@@ -186,116 +206,117 @@ static void Update_Join_Stats(Join_Ptr Join, Rel_Queue_Ptr Queue) {
   int col1 = Get_Column_1(Join);
   int col2 = Get_Column_2(Join);
   printf("%d.%d = %d.%d\n", rel1, col1, rel2, col2);
-  printf("ORIGINAL\n");
-  Rel_Queue_Node_Ptr prev, last ;
-  Find_two_last(Queue, &last, &prev);
+  //printf("ORIGINAL\n");
+  Rel_Queue_Node_Ptr prev, last  = Queue->tail;
+ // Find_two_last(Queue, &last, &prev);
+  prev = Find_Join_Rel(Queue, rel1, rel2);
   printf("%d = %d\n", prev->rel, last->rel);
+  
+  //make sure they are in the correct order
+  if(prev->rel != rel1) {
+	printf("%d and %d are different\nswap\n", prev->rel, rel1);
+    Rel_Queue_Node_Ptr temp = prev;
+	prev = last;
+    last = temp;	
+  }
 
-  return ;
+  //compute l and u
+  uint64_t u = last->stats[col2].u;
+  if(u > prev->stats[col1].u)
+    u = prev->stats[col1].u;
+  uint64_t l = last->stats[col2].l;
+  if(prev->stats[col1].l > l)
+    l = prev->stats[col1].l;
 
-  //TODO: ERASE FROM HERE
-//  Shell_Ptr temp = Get_Table_Array(Table);
-//  Shell_Ptr Shell1 = Get_Shell_by_index(temp, rel1);
-//  Shell_Ptr Shell2 = Get_Shell_by_index(temp, rel2);
-//
-//
-//  //compute l and u
-//  uint64_t u = Get_Column_u(Shell2, col2);
-//  if(Get_Column_u(Shell2, col2) > Get_Column_u(Shell1, col1))
-//    u = Get_Column_u(Shell1, col1);
-//  uint64_t l = Get_Column_l(Shell1, col1);
-//  if(Get_Column_l(Shell2, col2) > Get_Column_l(Shell1, col1))
-//    l = Get_Column_l(Shell2, col2);
-//
-//  //get f and d
-//  int64_t fa = Get_Column_f(Shell1, col1);
-//  int64_t da = Get_Column_d(Shell1, col1);
-//  int64_t fb = Get_Column_f(Shell2, col2);
-//  int64_t db = Get_Column_d(Shell2, col2);
-// 
-  //TODO: TILL HERE
-
-//  uint64_t n = u - l + 1;
-////  printf("fa * fb / n -> %llu * %llu / %llu\n", fa, fb, n);
-//  //compute f and d
-//  int64_t f = fa * fb / n;
-//  printf("f -> %lu\n", f);
-//  return f;
-//
-////  printf("da * db / n -> %llu * %llu / %llu\n", da, db, n);
-//  int64_t d = da * db / n;
-// // printf("d -> %llu\n", d);
-//
-////  for(int i =0; i < Get_num_of_columns(Shell1); i++){
-////    printf("BEFORE1\n");
-////    printf("l = %llu\n", Get_Column_l(Shell1, i));
-////    printf("u = %llu\n", Get_Column_u(Shell1, i));
-////    printf("f = %llu\n", Get_Column_f(Shell1, i));
-////    printf("d = %llu\n", Get_Column_d(Shell1, i));
-////  }
-////  printf("\n");
-////  for(int i =0; i < Get_num_of_columns(Shell2); i++){
-////    printf("BEFORE2\n");
-////    printf("l = %llu\n", Get_Column_l(Shell2, i));
-////    printf("u = %llu\n", Get_Column_u(Shell2, i));
-////    printf("f = %llu\n", Get_Column_f(Shell2, i));
-////    printf("d = %llu\n", Get_Column_d(Shell2, i));
-////  }
-//
-//  for(int i = 0; i < Get_num_of_columns(Shell1); i++){
-//    if(i == col1) {
-//      Set_Column_l(Shell1, col1, l);
-//      Set_Column_u(Shell1, col1, u);
-//      Set_Column_f(Shell1, col1, f);
-//      Set_Column_d(Shell1, col1, d);
-//    } else {
-//      Set_Column_f(Shell1, i, f);
-//      int64_t fc = Get_Column_f(Shell1, i);
-//      int64_t dc = Get_Column_d(Shell1, i);
-//      float d_fraction = d / (float)da;
-////    printf("dfraction1 = %f\n", d_fraction);
-//      float p = power((1 - d_fraction), (fc / dc));
-////    printf("p1 = %f\n", p);
-////    uint64_t t = dc * (1 - p);
-////    printf("d = %llu\n", t);
-//      Set_Column_d(Shell1, i, dc * (1 - p));
-//    }
+  //get f and d
+  int64_t fa = prev->stats[col1].f;
+  int64_t da = prev->stats[col1].d;
+  int64_t fb = last->stats[col2].f;
+  int64_t db = last->stats[col2].d;
+ 
+//  for(int i =0; i < prev->num_of_columns; i++){
+//    printf("BEFORE1\n");
+//    printf("l = %llu\n", prev->stats[i].l);
+//    printf("u = %llu\n", prev->stats[i].u);
+//    printf("f = %llu\n", prev->stats[i].f);
+//    printf("d = %llu\n", prev->stats[i].d);
 //  }
-//  for(int i =0; i < Get_num_of_columns(Shell2); i++){
-//    if(i == col2) {
-//      Set_Column_l(Shell2, col2, l);
-//      Set_Column_u(Shell2, col2, u);
-//      Set_Column_f(Shell2, col2, f);
-//      Set_Column_d(Shell2, col2, d);
-//    } else {
-//      Set_Column_f(Shell2, i, f);
-//      int64_t fc = Get_Column_f(Shell2, i);
-//      int64_t dc = Get_Column_d(Shell2, i);
-//      float d_fraction = d / (float)db;
-////      printf("dfraction2 = %f\n", d_fraction);
-//      float p = power((1 - d_fraction), (fc / dc));
-////      printf("p2 = %f\n", p);
-////      uint64_t t = dc * (1 - p);
-////      printf("d = %llu\n", t);
-//      Set_Column_d(Shell2, i, dc * (1 - p));
-//	}
+//  printf("\n");
+//  for(int i =0; i < last->num_of_columns; i++){
+//    printf("BEFORE2\n");
+//    printf("l = %llu\n", last->stats[i].l);
+//    printf("u = %llu\n", last->stats[i].u);
+//    printf("f = %llu\n", last->stats[i].f);
+//    printf("d = %llu\n", last->stats[i].d);
 //  }
-//
-////  for(int i =0; i < Get_num_of_columns(Shell1); i++){
-////    printf("AFTER1\n");
-////    printf("l = %llu\n", Get_Column_l(Shell1, i));
-////    printf("u = %llu\n", Get_Column_u(Shell1, i));
-////    printf("f = %llu\n", Get_Column_f(Shell1, i));
-////    printf("d = %llu\n", Get_Column_d(Shell1, i));
-////  }
-////  printf("\n");
-////  for(int i =0; i < Get_num_of_columns(Shell2); i++){
-////    printf("AFTER2\n");
-////    printf("l = %llu\n", Get_Column_l(Shell2, i));
-////    printf("u = %llu\n", Get_Column_u(Shell2, i));
-////    printf("f = %llu\n", Get_Column_f(Shell2, i));
-////    printf("d = %llu\n", Get_Column_d(Shell2, i));
-////  }
+
+  //compute f and d
+  uint64_t n = u - l + 1;
+  //printf("fa * fb / n -> %llu * %llu / %llu\n", fa, fb, n);
+  int64_t f = 0;
+  if(fa && fb) f = fa * fb / n;
+  //printf("f -> %lu\n", f);
+  //printf("da * db / n -> %llu * %llu / %llu\n", da, db, n);
+  int64_t d = 0;
+  if(da && db) d = da * db / n;
+  //printf("d -> %llu\n", d);
+
+  for(int i =0; i < prev->num_of_columns; i++){
+    if(i == col1) {
+      prev->stats[col1].l =  l;
+      prev->stats[col1].u =  u;
+      prev->stats[col1].d =  d;
+    } else {
+	  if(f && d) {
+        int64_t fc = prev->stats[i].f;
+        int64_t dc = prev->stats[i].d;
+        float d_fraction = d / (float)da;
+        //printf("dfraction1 = %f\n", d_fraction);
+        float p = power((1 - d_fraction), (fc / dc));
+        //printf("p1 = %f\n", p);
+        //uint64_t t = dc * (1 - p);
+        //printf("d = %llu\n", t);
+        prev->stats[i].d = dc * (1 - p);
+	  } else prev->stats[i].d = 0;
+    }
+    prev->stats[i].f = f;
+  }
+  for(int i =0; i < last->num_of_columns; i++){
+    if(i == col2) {
+      last->stats[col2].l =  l;
+      last->stats[col2].u =  u;
+      last->stats[col2].d =  d;
+    } else {
+	  if(f && d) {
+        int64_t fc = last->stats[i].f;
+        int64_t dc = last->stats[i].d;
+        float d_fraction = d / (float)db;
+        //printf("dfraction2 = %f\n", d_fraction);
+        float p = power((1 - d_fraction), (fc / dc));
+        //printf("p2 = %f\n", p);
+        //uint64_t t = dc * (1 - p);
+        //printf("d = %llu\n", t);
+        last->stats[i].d = dc * (1 - p);
+	  } else last->stats[i].d = 0;
+	}
+    last->stats[i].f = f;
+  }
+
+//  for(int i =0; i < prev->num_of_columns; i++){
+//    printf("AFTER1\n");
+//    printf("l = %llu\n", prev->stats[i].l);
+//    printf("u = %llu\n", prev->stats[i].u);
+//    printf("f = %llu\n", prev->stats[i].f);
+//    printf("d = %llu\n", prev->stats[i].d);
+//  }
+//  printf("\n");
+//  for(int i =0; i < last->num_of_columns; i++){
+//    printf("AFTER2\n");
+//    printf("l = %llu\n", last->stats[i].l);
+//    printf("u = %llu\n", last->stats[i].u);
+//    printf("f = %llu\n", last->stats[i].f);
+//    printf("d = %llu\n", last->stats[i].d);
+//  }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -308,22 +329,27 @@ static void Delete_Rel_Queue(Rel_Queue_Ptr Rel_Queue){
   while(current!=NULL){
     Rel_Queue_Node_Ptr temp = current;
     current=temp->next;
+	free(temp->stats);
     free(temp);
   }
+  free(Rel_Queue->Rels_already_passed);
   free(Rel_Queue);
 }
 
-static Rel_Queue_Ptr Create_Rel_Queue(){
+static Rel_Queue_Ptr Create_Rel_Queue(int num_of_rel){
   Rel_Queue_Ptr Rel_Queue = (Rel_Queue_Ptr)malloc(sizeof(struct Rel_Queue));
   Rel_Queue->head=NULL;
   Rel_Queue->tail=NULL;
   Rel_Queue->f = INT64_MAX;
+  Rel_Queue->Rels_already_passed = (int*)malloc(num_of_rel * sizeof(int));
+  for(int i = 0; i < num_of_rel; i++)
+    Rel_Queue->Rels_already_passed[i] = 0;
   return Rel_Queue;
 }
 
-static Rel_Queue_Node_Ptr Create_New_Node(int rel, Table_Ptr Table, int relative){
+static Rel_Queue_Node_Ptr Create_New_Node(int rel, Table_Ptr Table){
   Shell_Ptr Shell = Get_Table_Array(Table);
-  Shell_Ptr Shell_i = Get_Shell_by_index(Shell, relative);
+  Shell_Ptr Shell_i = Get_Shell_by_index(Shell, rel);
 
   Rel_Queue_Node_Ptr new_node = (Rel_Queue_Node_Ptr)malloc(sizeof(struct Rel_Queue_Node));
   new_node->rel = rel;
@@ -340,27 +366,28 @@ static Rel_Queue_Node_Ptr Create_New_Node(int rel, Table_Ptr Table, int relative
   }
   new_node->next = NULL;
   return new_node;
-
 }
 
-static void Insert_In_Empty_Queue(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue, int relative){
-  Rel_Queue->head = Create_New_Node(rel, Table, relative);
+static void Insert_In_Empty_Queue(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue){
+  Rel_Queue->head = Create_New_Node(rel, Table);
   Rel_Queue->tail = Rel_Queue->head;
+  Rel_Queue->Rels_already_passed[rel] = 1;
 }
 
-static void Insert_At_End(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue, int relative){
+static void Insert_At_End(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue){
   Rel_Queue_Node_Ptr temp = Rel_Queue->tail;
-  Rel_Queue_Node_Ptr new_node = Create_New_Node(rel, Table, relative);
+  Rel_Queue_Node_Ptr new_node = Create_New_Node(rel, Table);
   temp->next = new_node;
   Rel_Queue->tail = new_node;
+  Rel_Queue->Rels_already_passed[rel] = 1;
 }
 
-static void Insert_Rel_Node(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue, int64_t f, int relative){
+static void Insert_Rel_Node(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue, int64_t f){
   
   if(Rel_Queue->head==NULL)
-	Insert_In_Empty_Queue(rel, Table, Rel_Queue, relative);
+	Insert_In_Empty_Queue(rel, Table, Rel_Queue);
   else
-    Insert_At_End(rel, Table, Rel_Queue, relative);
+    Insert_At_End(rel, Table, Rel_Queue);
   if(f > -1 && Rel_Queue->f == INT64_MAX) {
 	//printf("%lu\n", f);
     Rel_Queue->f = f;
@@ -368,18 +395,8 @@ static void Insert_Rel_Node(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue, i
 	//printf("\n");
 }
 
-static int Already_in_queue(Rel_Queue_Ptr Queue, int rel) {
-  Rel_Queue_Node_Ptr pnode = Queue->head;
-  while(pnode) {
-    if(pnode->rel == rel) return 1;
-    pnode = pnode->next;
-  }
-  return 0;
-}
-
-static int Find_Relative_Value(int *Rels, int original_value, int num_of_rel) {
-  for(int i = 0; i < num_of_rel; i++)
-    if(Rels[i] == original_value) return i;
+static int Already_in_queue(Rel_Queue_Ptr Queue, int relative) {
+  return Queue->Rels_already_passed[relative];
 }
 
 static Join_Ptr Find_Join(Join_Ptr Joins, int rel1, int rel2, int num_of_joins) {
@@ -403,11 +420,14 @@ static Join_Ptr Connected(int rel1, Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed
   //find two last rels
   Rel_Queue_Node_Ptr pnode = Queue->head;
   if(pnode->next) {
-    Rel_Queue_Node_Ptr prev, last;
-    Find_two_last(Queue, &last, &prev);
+	while(pnode->next != Queue->tail) {
+      pnode = pnode->next;
+	}
+    Rel_Queue_Node_Ptr prev = pnode;
+    Rel_Queue_Node_Ptr last = prev->next;
     //printf("two nodes %d, %d\n", prev->rel, last->rel);
-    int rel2 = Find_Relative_Value(Rels, prev->rel, num_of_rel);
-    int rel3 = Find_Relative_Value(Rels, last->rel, num_of_rel);
+    int rel2 = prev->rel;
+    int rel3 = last->rel;
     if(!Find_Join(Joins, rel2, rel3, num_of_joins)) return NULL; 
 
     Join_Ptr Join = Find_Join(Joins, rel1, rel2, num_of_joins);
@@ -417,7 +437,7 @@ static Join_Ptr Connected(int rel1, Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed
   //only one node
   } else {
     //printf("one node %d\n", pnode->rel);
-    int rel2 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
+    int rel2 = pnode->rel;
     Join_Ptr Join = Find_Join(Joins, rel1, rel2, num_of_joins);
     if(Join) return Join; 
   }
@@ -432,9 +452,10 @@ static Join_Ptr Find_best_combo(Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Que
   int best;
   
   Join_Ptr ret;
+  int index = 0;
   //check every other relation
   for(int i = 0; i < num_of_rel; i++) {
-    if(Already_in_queue(Queue, Rels[i])) continue;
+    if(Already_in_queue(Queue, i)) continue;
     //printf("check %d\n", Rels[i]);
 
 	//if they are connected we find the particular join
@@ -442,21 +463,20 @@ static Join_Ptr Find_best_combo(Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Que
 	if(Join) {
 	  //printf("%d is connected with some rel from queue\n", i);
      
-	  //TODO: COMPARE TEMP STATS NOT THE ORIGINAL ONES 
 	  //Compute Join stats
-      int64_t f = Compute_Join_Stats(Join, Table);
+      int64_t f = Compute_Join_Stats(Join, Table, Queue, Rels, num_of_rel);
 	  //Compare f
       if(f < min) {
         min = f;
 		best = Rels[i];
 		ret = Join;
+		index = i;
 	  }
 	}
 	else continue;
   }
-  printf("found %d with f = %lu\n", best, min);
-  int relative = Find_Relative_Value(Rels, best, num_of_rel);
-  Insert_Rel_Node(best, Table, Queue, min, relative);
+  printf("found %d:%d with f = %lu\n", index, best, min);
+  Insert_Rel_Node(index, Table, Queue, min);
   return ret;
 }
 
@@ -467,13 +487,12 @@ static Rel_Queue_Ptr Push_last_rel(Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_
   Shell_Ptr Shell = Get_Table_Array(Table);
 
   for(int i = 0; i < num_of_rel; i++) {
-    if(Already_in_queue(Queue, Rels[i])) continue;
+    if(Already_in_queue(Queue, i)) continue;//Rels[i], Rels, num_of_rel)) continue;
 	if(Connected(i, Queue, Parsed_Query)) {
       Shell_Ptr Shell_i = Get_Shell_by_index(Shell, i);
 	  int num_of_columns = Get_num_of_columns(Shell_i);
 	  //printf("last push %d\n", Rels[i]);
-	  int relative = Find_Relative_Value(Rels, Rels[i], num_of_rel);
-      Insert_Rel_Node(Rels[i], Table, Queue, -1, relative);
+      Insert_Rel_Node(i, Table, Queue, -1);
 	  return Queue;
     }
   }
@@ -523,11 +542,10 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query, Table_Ptr Table){
 	//int num_of_columns = Get_num_of_columns(Shell_i);
 
 	int found_better = 0;
-    Best_Tree.Table[i] = Create_Rel_Queue();
+    Best_Tree.Table[i] = Create_Rel_Queue(num_of_rel);
     Best_Tree.counter++;
     printf("\n");
-	int relative = Find_Relative_Value(Rels, Rels[i], num_of_rel);
-    Insert_Rel_Node(Rels[i], Table, Best_Tree.Table[i], -1, relative);
+    Insert_Rel_Node(i, Table, Best_Tree.Table[i], -1);
     printf("%d inserted\n", Best_Tree.Table[i]->head->rel);
 
 	//find all possible paths
@@ -546,10 +564,11 @@ Rel_Queue_Ptr Prepare_Rel_Queue(Parsed_Query_Ptr Parsed_Query, Table_Ptr Table){
 		Print_Join(Join);
 		printf("\n");
 		//printf("passed better combo exists\n");
-		//TODO: at this point we have to update the join-stats (l, u, f)
+		//at this point we have to update the join-stats
 		//but temporarily since we are not sure
 		//we ll follow this path
-		Update_Join_Stats(Join, Best_Tree.Table[i]);
+		//so we keep a struct with the stats for each node
+		Update_Join_Stats(Join, Best_Tree.Table[i], Rels, num_of_rel);
 	  }
 	}
 	if(found_better) continue;
@@ -587,8 +606,8 @@ Execution_Queue_Ptr Execution_Queue, Rel_Queue_Ptr Rel_Queue) {
 
   int prev;
   while(pnode && pnode->next) { 
-    int rel1 = Find_Relative_Value(Rels, pnode->rel, num_of_rel);
-    int rel2 = Find_Relative_Value(Rels, pnode->next->rel, num_of_rel);
+    int rel1 = pnode->rel;
+    int rel2 = pnode->next->rel;
 	
     Join_Ptr Join;
 	while(1) {
