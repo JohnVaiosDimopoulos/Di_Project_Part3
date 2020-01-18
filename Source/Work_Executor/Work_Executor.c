@@ -6,7 +6,11 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-pthread_mutex_t t_m;// = PTHREAD_MUTEX_INITIALIZER;
+#define LIMIT 5
+
+int alive_threads = 0;
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t c = PTHREAD_COND_INITIALIZER;
 //sem_t me;
 	   
 struct Args {
@@ -26,7 +30,7 @@ void *myThreadFun(void *vargp) {
   Print_Query(args->Current_Query);
   //sleep(1);
 
-  pthread_mutex_lock(&t_m);
+  //pthread_mutex_lock(&t_m);
   Query_Ptr Query = Allocate_And_Copy_Query(args->Current_Query);
   Table_Ptr Relations = args->Relations;
   FILE *fp_write = args->fp_write;
@@ -35,7 +39,7 @@ void *myThreadFun(void *vargp) {
   free(args->Current_Query);
   args->Relations = NULL;
   args->fp_write = NULL;
-  pthread_mutex_unlock(&t_m);
+  //pthread_mutex_unlock(&t_m);
 
   Execute_Query(Query, Relations, fp_write);
   Delete_Query(Query);
@@ -46,10 +50,20 @@ void *myThreadFun(void *vargp) {
   //printf("UNLOCK\n");
   //sem_post(&me);
     
-//  pthread_exit(args->thread_id);
-  return NULL;
+  pthread_mutex_lock(&m);
+  alive_threads--;
+  //printf("---------->%d\n", alive_threads);
+  pthread_cond_signal(&c);
+  pthread_mutex_unlock(&m);
+  pthread_exit(args->thread_id);
 }   
 
+static void Wait_for_available_thread() {
+  pthread_mutex_lock(&m);
+  while(alive_threads >= LIMIT)
+    pthread_cond_wait(&c, &m);
+  pthread_mutex_unlock(&m);
+}
 
 void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
 
@@ -60,41 +74,43 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
   Batch_Ptr Current_Batch;
 
   pthread_t *thread_id; 
-  if(pthread_mutex_init(&t_m, NULL) != 0) {
-    printf("\n mutex init failed\n"); exit(1);
-  }
   //sem_init(&me,1,0);
 
   FILE *fp_write = fopen("Results", "w");
   while((Current_Batch = Read_next_Batch(fp)) != NULL) {
-    int cnt = Get_num_of_Queries(Current_Batch);
-    Args_Ptr *args = (Args_Ptr*)malloc(cnt * sizeof(Args_Ptr));
-    thread_id = (pthread_t*)malloc(cnt * sizeof(pthread_t));
+    int num_of_queries = Get_num_of_Queries(Current_Batch);
+    Args_Ptr *args = (Args_Ptr*)malloc(num_of_queries * sizeof(Args_Ptr));
+    thread_id = (pthread_t*)malloc(num_of_queries * sizeof(pthread_t));
 	int i = 0;
+    int counter = 0;
 	while(Get_num_of_Queries(Current_Batch)){
-    //for(int i = 0; i < 10; i++) {
+      //Fill argument-struct for pthread_create
       args[i] = (Args_Ptr)malloc(sizeof(struct Args));
       args[i]->thread_id = thread_id[i];
       args[i]->Current_Query = Pop_Next_Query_from_Batch(Current_Batch);
       args[i]->Relations = Relations;
       args[i]->fp_write = fp_write;
-      
-	  pthread_create(&thread_id[i], NULL, myThreadFun, (void *)args[i]);
-	  pthread_join(thread_id[i], NULL);
+     
+      //Wait for available thread
+      Wait_for_available_thread();
+      pthread_mutex_lock(&m);
+      alive_threads++;
+      //printf("----->%d\n", alive_threads);
+      pthread_mutex_unlock(&m);
+      pthread_create(&thread_id[i], NULL, myThreadFun, (void *)args[i]);
 
 	  i++; 
 //      break;
     }
-	//printf("\t\t\t%d\n", cnt);
-    for(int i = 0; i < cnt; i++) {
-      //printf("LOCK\n");
+    for(int i = 0; i < num_of_queries; i++) {
       //sem_wait(&me);
-	  //free(args[i]);
+	  pthread_join(thread_id[i], NULL);
+	  free(args[i]);
     }
 	free(args);
     Delete_Batch(Current_Batch);
     free(thread_id);
-//    break;
+    break;
   }
   fclose(fp_write);
 

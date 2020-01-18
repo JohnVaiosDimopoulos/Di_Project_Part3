@@ -198,23 +198,22 @@ static Rel_Queue_Node_Ptr Find_Join_Rel(Rel_Queue_Ptr Queue, int rel1, int rel2)
 static void Update_Join_Stats(Join_Ptr Join, Rel_Queue_Ptr Queue, int *Rels, int num_of_rel) {
   //Print_Rel_Queue(Queue);
   if(Is_Self_Join(Join)) return;
-  printf("\nUPDATE\n");
+  //printf("\nUPDATE\n");
 
   //get relations and columns
   int rel1 = Get_Relation_1(Join);
   int rel2 = Get_Relation_2(Join);
   int col1 = Get_Column_1(Join);
   int col2 = Get_Column_2(Join);
-  printf("%d.%d = %d.%d\n", rel1, col1, rel2, col2);
+  //printf("%d.%d = %d.%d\n", rel1, col1, rel2, col2);
   //printf("ORIGINAL\n");
   Rel_Queue_Node_Ptr prev, last  = Queue->tail;
- // Find_two_last(Queue, &last, &prev);
   prev = Find_Join_Rel(Queue, rel1, rel2);
-  printf("%d = %d\n", prev->rel, last->rel);
+  //printf("%d = %d\n", prev->rel, last->rel);
   
   //make sure they are in the correct order
   if(prev->rel != rel1) {
-	printf("%d and %d are different\nswap\n", prev->rel, rel1);
+	//printf("%d and %d are different\nswap\n", prev->rel, rel1);
     Rel_Queue_Node_Ptr temp = prev;
 	prev = last;
     last = temp;	
