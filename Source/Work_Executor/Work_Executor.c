@@ -6,9 +6,10 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define LIMIT 5
+#define LIMIT 13
 
 int end_of_batch = 0;
+int end = 0;
 int alive_threads = 0;
 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
@@ -20,7 +21,7 @@ struct Args {
   Query_Ptr Current_Query;
   Table_Ptr Relations;
   FILE *fp_write;
-  uint64_t ** Results_array;
+  uint64_t **Results_array;
   int query_id;
 };
  
@@ -33,7 +34,7 @@ void *myThreadFun(void *vargp) {
     //Wait for next query
     sem_wait(&thread);
     pthread_t id;
-	if(end_of_batch) {
+	if(end) {
       pthread_exit(id);
 	  break;
 	}
@@ -43,7 +44,7 @@ void *myThreadFun(void *vargp) {
     Query_Ptr Query = Allocate_And_Copy_Query(args->Current_Query);
     Table_Ptr Relations = args->Relations;
     FILE *fp_write = args->fp_write;
-    uint64_t ** Results_array = args->Results_array;
+    uint64_t **Results_array = args->Results_array;
     int query_id = args->query_id;
 	//printf("Printing from Thread \nQuery:");
     //Print_Query(Query);
@@ -90,6 +91,7 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
 
   FILE *fp_write = fopen("Results", "w");
   uint64_t *Results_array[4];
+  args = (Args_Ptr)malloc(sizeof(struct Args));
   thread_id = (pthread_t*)malloc(LIMIT * sizeof(pthread_t));
   for(int i = 0; i < LIMIT; i++)
     pthread_create(&thread_id[i], NULL, myThreadFun, (void *)args);
@@ -108,7 +110,6 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
 	while(Get_num_of_Queries(Current_Batch)){
 
       //Fill argument-struct for pthread_create
-      args = (Args_Ptr)malloc(sizeof(struct Args));
       args->thread_id = thread_id[query_id];
       args->Current_Query = Pop_Next_Query_from_Batch(Current_Batch);
       args->Relations = Relations;
@@ -134,14 +135,7 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
 	  query_id++; 
 //      break;
     }
-	//Wake all threads
-    for(int i = 0; i < LIMIT; i++) {
-	  end_of_batch = 1;
-      sem_post(&thread);
-	}
-    for(int i = 0; i < LIMIT; i++) {
-	  pthread_join(thread_id[i], NULL);
-    }
+	while(alive_threads);
 	printf("\n\n\nEND OF BATCH\n");
     for(int i = 0; i < num_of_queries; i++) {
       for(int j = 0; j < 4; j++) {
@@ -149,19 +143,24 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
           printf("\t-------------------->%d ", Results_array[j][i]);
       }
       printf("\n");
-    }
-	
-	free(args);
+	}
     Delete_Batch(Current_Batch);
-    free(thread_id);
 	for(int i = 0; i < 4; i++)
       free(Results_array[i]);
-    break;
+    //break;
+  }
+  //Wake all threads
+  for(int i = 0; i < LIMIT; i++) {
+    end = 1;
+    sem_post(&thread);
+  }
+  for(int i = 0; i < LIMIT; i++) {
+    pthread_join(thread_id[i], NULL);
   }
 
+  free(args);
+  free(thread_id);
   fclose(fp_write);
-
   free(path);
   fclose(fp);
-
 }
