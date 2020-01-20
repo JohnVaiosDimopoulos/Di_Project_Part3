@@ -175,7 +175,6 @@ static List_Ptr Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B) {
   B1 = B2 = Relation_B->tuples;
 
   int i = 0;
-  int end_of_B = 0;
   int cntA = 0;
   int cntB1 = 0;
   int cntB2 = 0;
@@ -183,20 +182,6 @@ static List_Ptr Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B) {
   List_Ptr Results_List = Create_and_Initialize_List();
 
   while(1) {
-    if(end_of_B) {
-	  printf("end\n");
-      cntA++;
-      if(cntA == Relation_A->num_of_tuples)
-        break;
-      A++;
-      if(A->element == B2->element) {
-        Insert_Record(Results_List, A->row_id, B2->row_id);
-        i++;
-      }
-      //Print_Tuple_List(temp_List, A->row_id, Results_List);
-      continue;
-    }
-
     if(A->element < B2->element) {
       cntA++;
       if(cntA == Relation_A->num_of_tuples)
@@ -206,32 +191,57 @@ static List_Ptr Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B) {
     }
     else if(A->element > B2->element) {
       cntB2++;
-      if(cntB2 == Relation_B->num_of_tuples)
-        end_of_B = 1;
-	  else
+	  //reached end of B with B2
+	  //move B2 back to B1
+      if(cntB2 == Relation_B->num_of_tuples) {
+        cntB2 = cntB1;
+        B2 = B1;
+		
+		//and move A too
+        cntA++;
+        if(cntA == Relation_A->num_of_tuples)
+          break;
+        A++;
+	  }else
         B2++;
       if(B1->element != B2->element) {
 		cntB1 = cntB2;
-        B1 =2;
+        B1 = B2;
       }
+      continue;
     }
+
     if(A->element == B2->element) {
       Insert_Record(Results_List, A->row_id, B2->row_id);
       i++;
     }
+
     cntB2++;
-    if(cntB2 == Relation_B->num_of_tuples)
-      end_of_B = 1;
-	else
+	//reached end of B with B2
+	//move B2 back to B1
+    if(cntB2 == Relation_B->num_of_tuples) {
+      cntB2 = cntB1;
+      B2 = B1;
+      
+	  //and move A too
+      cntA++;
+      if(cntA == Relation_A->num_of_tuples)
+        break;
+      A++;
+	} else
       B2++;
+	
+	//if B changed element, move A too
     if(B1->element != B2->element) {
       cntA++;
       if(cntA == Relation_A->num_of_tuples)
         break;
       A++;
+	  //if A changed element, move B1 too
       if(A->element != B1->element) {
 		cntB1 = cntB2;
         B1 = B2;
+	  //else move B2 back where B1 is
       } else {
 		cntB2 = cntB1;
         B2 = B1;
@@ -240,7 +250,6 @@ static List_Ptr Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B) {
   }
   return Results_List;
 }
-
 
 
 List_Ptr Execute_Join(RelationPtr Relation_A, RelationPtr Relation_B){
