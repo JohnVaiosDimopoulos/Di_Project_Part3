@@ -8,70 +8,70 @@ static void Print_Result(List_Ptr List) {
   fclose(fp);
 }
 
-struct Tuple_List_Node {
-  uint64_t element;
-  uint64_t row_id;
-  struct Tuple_List_Node *next;
-};
+//struct Tuple_List_Node {
+//  uint64_t element;
+//  uint64_t row_id;
+//  struct Tuple_List_Node *next;
+//};
+//
+////List of tuples
+//struct Tuple_List {
+//  struct Tuple_List_Node *start;
+//  struct Tuple_List_Node *last;
+//};
+//
+//typedef struct Tuple_List_Node* Tuple_List_Node_Ptr;
+//typedef struct Tuple_List* Tuple_List_Ptr;
 
-//List of tuples
-struct Tuple_List {
-  struct Tuple_List_Node *start;
-  struct Tuple_List_Node *last;
-};
+//static Tuple_List_Node_Ptr New_Node(Tuple_Ptr tuple) {
+//  Tuple_List_Node_Ptr new = (Tuple_List_Node_Ptr)malloc(sizeof(struct Tuple_List_Node));
+//  new->row_id = tuple->row_id;
+//  new->element = tuple->element;
+//  new->next = NULL;
+//  return new;
+//}
+//static void Insert(Tuple_List_Ptr List, Tuple_Ptr tuple) {
+//  Tuple_List_Node_Ptr new = New_Node(tuple);
+//  Tuple_List_Node_Ptr pnode = List->last;
+//  
+//  //first node
+//  if(pnode == NULL) {
+//    List->start = new;
+//  } else {
+//    pnode->next = new;
+//  }
+//  List->last = new;
+//}
+//
+//
+//static Tuple_List_Ptr Create_List() {
+//  Tuple_List_Ptr List = (Tuple_List_Ptr)malloc(sizeof(struct Tuple_List));
+//  List->start  = NULL;
+//  List->last  = NULL;
+//  return List;
+//}
+//
+//static void Print_Tuple_List(Tuple_List_Ptr List, uint64_t row_id, List_Ptr Result_List) {
+//  //printf("PRINT LIST\n");
+//  Tuple_List_Node_Ptr pnode = List->start;
+//  while(pnode) {
+//    Insert_Record(Result_List, row_id, pnode->row_id);
+//    pnode = pnode->next;
+//  }
+//}
 
-typedef struct Tuple_List_Node* Tuple_List_Node_Ptr;
-typedef struct Tuple_List* Tuple_List_Ptr;
-
-static Tuple_List_Node_Ptr New_Node(Tuple_Ptr tuple) {
-  Tuple_List_Node_Ptr new = (Tuple_List_Node_Ptr)malloc(sizeof(struct Tuple_List_Node));
-  new->row_id = tuple->row_id;
-  new->element = tuple->element;
-  new->next = NULL;
-  return new;
-}
-static void Insert(Tuple_List_Ptr List, Tuple_Ptr tuple) {
-  Tuple_List_Node_Ptr new = New_Node(tuple);
-  Tuple_List_Node_Ptr pnode = List->last;
-  
-  //first node
-  if(pnode == NULL) {
-    List->start = new;
-  } else {
-    pnode->next = new;
-  }
-  List->last = new;
-}
-
-
-static Tuple_List_Ptr Create_List() {
-  Tuple_List_Ptr List = (Tuple_List_Ptr)malloc(sizeof(struct Tuple_List));
-  List->start  = NULL;
-  List->last  = NULL;
-  return List;
-}
-
-static void Print_Tuple_List(Tuple_List_Ptr List, uint64_t row_id, List_Ptr Result_List) {
-  //printf("PRINT LIST\n");
-  Tuple_List_Node_Ptr pnode = List->start;
-  while(pnode) {
-    Insert_Record(Result_List, row_id, pnode->row_id);
-    pnode = pnode->next;
-  }
-}
-
-static void Empty_List(Tuple_List_Ptr List) {
-  //printf("EMPTY LIST\n\n");
-  Tuple_List_Node_Ptr pnode = List->start;
-  Tuple_List_Node_Ptr temp;
-  while(pnode) {
-    temp = pnode->next;
-    free(pnode);
-    pnode = temp;
-  }
-  List->start = NULL;
-  List->last = NULL;
-}
+//static void Empty_List(Tuple_List_Ptr List) {
+//  //printf("EMPTY LIST\n\n");
+//  Tuple_List_Node_Ptr pnode = List->start;
+//  Tuple_List_Node_Ptr temp;
+//  while(pnode) {
+//    temp = pnode->next;
+//    free(pnode);
+//    pnode = temp;
+//  }
+//  List->start = NULL;
+//  List->last = NULL;
+//}
 
 //static void Join_Relations(RelationPtr A, RelationPtr B, List_Ptr Result_List) {
 //  Tuple_Ptr A1, B1, B2;
@@ -209,9 +209,8 @@ static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_
         B2++;
       if(B1->element != B2->element) {
 		cntB1 = cntB2;
-        B1 = B2;
+        B1 =2;
       }
-      continue;
     }
     if(A->element == B2->element) {
       Insert_Record(Result_List, A->row_id, B2->row_id);
