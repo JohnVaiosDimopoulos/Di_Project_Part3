@@ -84,13 +84,12 @@ static void Empty_List(Tuple_List_Ptr List) {
 //  int end_of_B = 0;
 //  while(1) {
 //    if(end_of_B) {
+//	  printf("end\n");
 //      cntA++;
 //      if(cntA == A->num_of_tuples) break;
 //      A1++;
 //      Print_Tuple_List(temp_List, A1->row_id, Result_List);
-//      cntA++;
-//      if(cntA == A->num_of_tuples) break;
-//      A1++;
+//      continue;
 //    }
 //    //move A
 //    if(A1->element < B1->element) {
@@ -175,10 +174,25 @@ static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_
   B1 = B2 = Relation_B->tuples;
 
   int i = 0;
+  int end_of_B = 0;
   int cntA = 0;
-  int cntB = 0;
+  int cntB1 = 0;
+  int cntB2 = 0;
 
   while(1) {
+    if(end_of_B) {
+	  printf("end\n");
+      cntA++;
+      if(cntA == Relation_A->num_of_tuples)
+        break;
+      A++;
+      if(A->element == B2->element) {
+        Insert_Record(Result_List, A->row_id, B2->row_id);
+        i++;
+      }
+      //Print_Tuple_List(temp_List, A->row_id, Result_List);
+      continue;
+    }
 
     if(A->element < B2->element) {
       cntA++;
@@ -188,8 +202,13 @@ static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_
       continue;
     }
     else if(A->element > B2->element) {
-      B2++;
+      cntB2++;
+      if(cntB2 == Relation_B->num_of_tuples)
+        end_of_B = 1;
+	  else
+        B2++;
       if(B1->element != B2->element) {
+		cntB1 = cntB2;
         B1 = B2;
       }
       continue;
@@ -198,15 +217,21 @@ static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_
       Insert_Record(Result_List, A->row_id, B2->row_id);
       i++;
     }
-    B2++;
+    cntB2++;
+    if(cntB2 == Relation_B->num_of_tuples)
+      end_of_B = 1;
+	else
+      B2++;
     if(B1->element != B2->element) {
       cntA++;
       if(cntA == Relation_A->num_of_tuples)
         break;
       A++;
       if(A->element != B1->element) {
+		cntB1 = cntB2;
         B1 = B2;
       } else {
+		cntB2 = cntB1;
         B2 = B1;
       }
     }
