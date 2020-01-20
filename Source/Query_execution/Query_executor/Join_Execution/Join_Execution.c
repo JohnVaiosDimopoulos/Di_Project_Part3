@@ -504,6 +504,7 @@ static void Update_Stats_for_Self_Join(Table_Ptr Table, Join_Ptr Join) {
 
 Intermediate_Result_Ptr Execute_Joins(Execution_Queue_Ptr Execution_Queue, Table_Ptr Filtered_Relations,Table_Ptr Original_Relations,int* relation_map){
   printf("EXECUTE JOINS...\n");
+  //sleep(1);
 
   Intermediate_Result_Ptr Intermediate_Result = Create_Intermediate_Result();
   Join_Ptr Last_Join = NULL;

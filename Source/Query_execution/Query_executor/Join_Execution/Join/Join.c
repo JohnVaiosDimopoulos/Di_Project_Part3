@@ -167,7 +167,8 @@ static void Print_Result(List_Ptr List) {
 //  }
 //}
 
-static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_Ptr Result_List) {
+//static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_Ptr Result_List) {
+static List_Ptr Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B) {
 
   Tuple_Ptr A, B1, B2;
   A = Relation_A->tuples;
@@ -179,6 +180,8 @@ static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_
   int cntB1 = 0;
   int cntB2 = 0;
 
+  List_Ptr Results_List = Create_and_Initialize_List();
+
   while(1) {
     if(end_of_B) {
 	  printf("end\n");
@@ -187,10 +190,10 @@ static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_
         break;
       A++;
       if(A->element == B2->element) {
-        Insert_Record(Result_List, A->row_id, B2->row_id);
+        Insert_Record(Results_List, A->row_id, B2->row_id);
         i++;
       }
-      //Print_Tuple_List(temp_List, A->row_id, Result_List);
+      //Print_Tuple_List(temp_List, A->row_id, Results_List);
       continue;
     }
 
@@ -213,7 +216,7 @@ static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_
       }
     }
     if(A->element == B2->element) {
-      Insert_Record(Result_List, A->row_id, B2->row_id);
+      Insert_Record(Results_List, A->row_id, B2->row_id);
       i++;
     }
     cntB2++;
@@ -235,13 +238,15 @@ static void Join_Relations(RelationPtr Relation_A, RelationPtr Relation_B, List_
       }
     }
   }
+  return Results_List;
 }
+
+
 
 List_Ptr Execute_Join(RelationPtr Relation_A, RelationPtr Relation_B){
   printf("JOIN\n\n");
-  List_Ptr Result_List = Create_and_Initialize_List();
-  Join_Relations(Relation_A, Relation_B, Result_List);
+  List_Ptr Results_List = Join_Relations(Relation_A, Relation_B);
   printf("JOIN ENDED\n\n");
-  return Result_List;
+  return Results_List;
 }
 
