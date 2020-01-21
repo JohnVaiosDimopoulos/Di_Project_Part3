@@ -6,7 +6,7 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define LIMIT 4
+#define LIMIT 3
 
 int end_of_batch = 0;
 int end = 0;
