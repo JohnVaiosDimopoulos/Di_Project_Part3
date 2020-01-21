@@ -6,7 +6,7 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define LIMIT 1
+#define LIMIT 3
 
 int end_of_batch = 0;
 int end = 0;
@@ -135,13 +135,15 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
 	  //printf("THREAD GOT IT\n");
 
 	  query_id++; 
-//      break;
+      //break;
     }
 	while(alive_threads);
 	printf("\n\n\nEND OF BATCH\n");
     for(int i = 0; i < num_of_queries; i++) {
       for(int j = 0; j < 4; j++) {
-        if(Results_array[j][i] != -1)
+        if(Results_array[j][i] == 0)
+          fprintf(fp_write, "NULL ");
+        else if(Results_array[j][i] != -1)
           fprintf(fp_write, "%llu ", Results_array[j][i]);
       }
       fprintf(fp_write, "\n");
@@ -149,7 +151,7 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
     Delete_Batch(Current_Batch);
 	for(int i = 0; i < 4; i++)
       free(Results_array[i]);
-    break;
+    //break;
   }
   //Wake all threads
   for(int i = 0; i < LIMIT; i++) {

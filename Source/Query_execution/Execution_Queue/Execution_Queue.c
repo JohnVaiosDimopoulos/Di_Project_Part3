@@ -61,6 +61,7 @@ Execution_Queue_Node_Ptr Create_New_Node(Join_Ptr Join, \
 Stats_Ptr stats1, Stats_Ptr stats2, uint64_t num_of_columns1, uint64_t num_of_columns2){
   Execution_Queue_Node_Ptr new_node = (Execution_Queue_Node_Ptr)malloc(sizeof(struct Execution_Queue_Node));
   new_node->Join=Join;
+  //Print_Join(new_node->Join);
   new_node->stats1 = (Stats_Ptr)malloc(num_of_columns1 * sizeof(struct Stats));
   for(int i = 0; i < num_of_columns1; i++) {
     new_node->stats1[i].l = stats1[i].l;
@@ -80,7 +81,6 @@ Stats_Ptr stats1, Stats_Ptr stats2, uint64_t num_of_columns1, uint64_t num_of_co
   new_node->num_of_columns2 = num_of_columns2;
   new_node->next=NULL;
   return new_node;
-
 }
 
 //static void Insert_In_Empty_Queue(Join_Ptr Join, Execution_Queue_Ptr Execution_Queue) { 

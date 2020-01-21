@@ -6,7 +6,6 @@
 #include <limits.h>
 
 typedef struct {
-  //Rel_Queue_Ptr *Table;
   Execution_Queue_Ptr *Table;
   int counter;
 }HT;
@@ -27,20 +26,6 @@ struct Execution_Queue_Node{
 
 typedef struct Execution_Queue_Node* Execution_Queue_Node_Ptr;
 
-struct Rel_Queue{
-  struct Rel_Queue_Node* head;
-  struct Rel_Queue_Node* tail;
-  int64_t f;
-  int *Rels_already_passed;
-};
-
-struct Rel_Queue_Node{
-  int rel;
-  int num_of_columns;
-  Stats_Ptr stats;
-  struct Rel_Queue_Node* next;
-};
-
 struct Stats{
   uint64_t l;
   uint64_t u;
@@ -56,10 +41,7 @@ static void Check_For_Self_joins(Parsed_Query_Ptr Parsed_Query,Execution_Queue_P
   for(int i =0;i<Get_Num_of_Joins(Parsed_Query);i++){
     Join_Ptr Current_Join = Get_Join_by_index(Joins_Array,i);
     if(Is_Self_Join(Current_Join)){
-      //Insert_Node(Current_Join,Execution_Queue);
       Insert_Node(Current_Join, Execution_Queue, NULL, NULL, 0, 0);
-      (*joins_inserted)++;
-
     }
   }
 }
@@ -68,30 +50,67 @@ static void Check_For_Self_joins(Parsed_Query_Ptr Parsed_Query,Execution_Queue_P
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//static void Print_Rel_Queue(Rel_Queue_Ptr Rel_Queue){
-//  if(!Rel_Queue) return;
-//  printf("===REL QUEUE===\n");
+//static int Find_which_rel_connects_the_second_with_the_first(Join_Ptr Join1, Join_Ptr Join2) {
+//  int rel1 = Get_Relation_1(Join2);
+//  int rel2 = Get_Relation_2(Join2);
 //
-//  Rel_Queue_Node_Ptr temp = Rel_Queue->head;
-//  printf("%lu:\n", Rel_Queue->f);
-//  while (temp!=NULL){
-//    printf("(%d:)->\n", temp->rel);
-//	for(int i = 0; i < temp->num_of_columns; i++) {
-//      printf("\t%llu, %llu, %lu, %lu\n", temp->stats[i].l, temp->stats[i].u, temp->stats[i].f, temp->stats[i].d);
-//	}
-//    temp=temp->next;
-//  }
-//  printf("\n\n");
-//}
+//  if(rel1 == Get_Relation_1(Join1) || rel1 == Get_Relation_2(Join1)) return 1;
+//  if(rel2 == Get_Relation_1(Join1) || rel2 == Get_Relation_2(Join1)) return 2;
 //
-//static int Find_Relative_Value(int *Rels, int original_value, int num_of_rel) {
-//  for(int i = 0; i < num_of_rel; i++)
-//    if(Rels[i] == original_value) return i;
 //}
 
 /////////////////////////////	STATS	///////////////////////////////////////////
 static int64_t Compute_Join_Stats(Execution_Queue_Node_Ptr Pnode) {
+//static Execution_Queue_Node_Ptr Compute_Join_Stats(Execution_Queue_Node_Ptr Pnode1, Execution_Queue_Node_Ptr Pnode2) {
+//  printf("COMPUTE...\nJoin1\n");
+//  Print_Join(Pnode1->Join);
+//  printf("\nJoin2\n");
+//  Print_Join(Pnode2->Join);
+//  printf("\n");
+//  
+//  Join_Ptr Join1 = Pnode1->Join;
+//  Join_Ptr Join2 = Pnode2->Join;
+//  int rel1 = Find_which_rel_connects_the_second_with_the_first(Join2, Join1);
+//  int rel2 = Find_which_rel_connects_the_second_with_the_first(Join1, Join2);
+//  //printf("the %dth rel\n", rel);
+//
+//  //Find the new stats
+//  Stats_Ptr stats1, stats2;
+//  uint64_t num_of_columns1, num_of_columns2;
+//  if(rel1 == 2 && rel2 == 1) {
+//    printf("2-1\n");
+//	 stats1 = Get_Node_stats2(Pnode1);
+//	 num_of_columns1 = Get_Node_num_of_columns2(Pnode1);
+//	 stats2 = Get_Node_stats2(Pnode2);
+//	 num_of_columns2 = Get_Node_num_of_columns2(Pnode2);
+//  } else if(rel1 == 1 && rel2 == 1) {
+//    printf("1-1\n");
+//	 stats1 = Get_Node_stats1(Pnode1);
+//	 num_of_columns1 = Get_Node_num_of_columns1(Pnode1);
+//	 stats2 = Get_Node_stats2(Pnode2);
+//	 num_of_columns2 = Get_Node_num_of_columns2(Pnode2);
+//
+//  } else if(rel1 == 2 && rel2 == 2) {
+//    printf("2-2\n");
+//	stats1 = Get_Node_stats1(Pnode2);
+//	num_of_columns1 = Get_Node_num_of_columns1(Pnode2);
+//	stats2 = Get_Node_stats2(Pnode1);
+//	num_of_columns2 = Get_Node_num_of_columns2(Pnode1);
+//
+//  } else if(rel1 == 1 && rel2 == 2) {
+//    printf("1-2\n");
+//	stats1 = Get_Node_stats1(Pnode2);
+//	num_of_columns1 = Get_Node_num_of_columns1(Pnode2);
+//	stats2 = Get_Node_stats1(Pnode1);
+//	num_of_columns2 = Get_Node_num_of_columns1(Pnode1);
+//  }
+//  Execution_Queue_Node_Ptr New = Create_New_Node(Join2, stats1, stats2, num_of_columns1, num_of_columns2);
+//  if(New == NULL) printf("NULL\n");
+//
+//  printf("new \n");
+  printf("COMPUTE...\n");
   Join_Ptr Join = Pnode->Join;
+  //Print_Join(Join);
   if(Is_Self_Join(Join)) return -1;
   
   //get relations and columns
@@ -242,141 +261,6 @@ static void Update_Join_Stats(Execution_Queue_Node_Ptr Pnode) {
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//static void Delete_Rel_Queue(Rel_Queue_Ptr Rel_Queue){
-//  if(Rel_Queue == NULL) return;
-//
-//  Rel_Queue_Node_Ptr current = Rel_Queue->head;
-//  Rel_Queue->head=NULL;
-//  Rel_Queue->tail=NULL;
-//  while(current!=NULL){
-//    Rel_Queue_Node_Ptr temp = current;
-//    current=temp->next;
-//	free(temp->stats);
-//    free(temp);
-//  }
-//  free(Rel_Queue->Rels_already_passed);
-//  free(Rel_Queue);
-//}
-//
-//static Rel_Queue_Ptr Create_Rel_Queue(int num_of_rel){
-//  Rel_Queue_Ptr Rel_Queue = (Rel_Queue_Ptr)malloc(sizeof(struct Rel_Queue));
-//  Rel_Queue->head=NULL;
-//  Rel_Queue->tail=NULL;
-//  Rel_Queue->f = INT64_MAX;
-//  Rel_Queue->Rels_already_passed = (int*)malloc(num_of_rel * sizeof(int));
-//  for(int i = 0; i < num_of_rel; i++)
-//    Rel_Queue->Rels_already_passed[i] = 0;
-//  return Rel_Queue;
-//}
-//
-//static Rel_Queue_Node_Ptr Create_New_Node(int rel, Table_Ptr Table){
-//  Shell_Ptr Shell = Get_Table_Array(Table);
-//  Shell_Ptr Shell_i = Get_Shell_by_index(Shell, rel);
-//
-//  Rel_Queue_Node_Ptr new_node = (Rel_Queue_Node_Ptr)malloc(sizeof(struct Rel_Queue_Node));
-//  new_node->rel = rel;
-//  int num_of_columns = Get_num_of_columns(Shell_i);
-//  new_node->num_of_columns = num_of_columns;
-//  //printf("insert %d, ", rel);
-//  //printf("with %d columns\n", num_of_columns);
-//  new_node->stats = (Stats_Ptr)malloc(new_node->num_of_columns * sizeof(struct Stats));
-//  for(int i = 0; i < new_node->num_of_columns; i++) {
-//    new_node->stats[i].l = Get_Column_l(Shell_i, i);
-//    new_node->stats[i].u = Get_Column_u(Shell_i, i);
-//    new_node->stats[i].f = Get_Column_f(Shell_i, i);
-//    new_node->stats[i].d = Get_Column_d(Shell_i, i);
-//  }
-//  new_node->next = NULL;
-//  return new_node;
-//}
-//
-//static void Insert_In_Empty_Queue(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue){
-//  Rel_Queue->head = Create_New_Node(rel, Table);
-//  Rel_Queue->tail = Rel_Queue->head;
-//  Rel_Queue->Rels_already_passed[rel] = 1;
-//}
-//
-//static void Insert_At_End(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue){
-//  Rel_Queue_Node_Ptr temp = Rel_Queue->tail;
-//  Rel_Queue_Node_Ptr new_node = Create_New_Node(rel, Table);
-//  temp->next = new_node;
-//  Rel_Queue->tail = new_node;
-//  Rel_Queue->Rels_already_passed[rel] = 1;
-//}
-//
-//static void Insert_Rel_Node(int rel, Table_Ptr Table, Rel_Queue_Ptr Rel_Queue, int64_t f){
-//  
-//  if(Rel_Queue->head==NULL)
-//	Insert_In_Empty_Queue(rel, Table, Rel_Queue);
-//  else
-//    Insert_At_End(rel, Table, Rel_Queue);
-//  if(f > -1 && Rel_Queue->f == INT64_MAX) {
-//	//printf("%lu\n", f);
-//    Rel_Queue->f = f;
-//  } //else
-//	//printf("\n");
-//}
-//
-
-//static Rel_Queue_Ptr Push_last_rel(Rel_Queue_Ptr Queue, Parsed_Query_Ptr Parsed_Query, Table_Ptr Table) {
-//  if(Queue == NULL) return NULL;
-//  int num_of_rel = Get_Num_of_Relations(Parsed_Query);
-//  int *Rels = Get_Relations(Parsed_Query);
-//  Shell_Ptr Shell = Get_Table_Array(Table);
-//
-//  for(int i = 0; i < num_of_rel; i++) {
-//    if(Already_in_queue(Queue, i)) continue;//Rels[i], Rels, num_of_rel)) continue;
-//	if(Connected(i, Queue, Parsed_Query)) {
-//      Shell_Ptr Shell_i = Get_Shell_by_index(Shell, i);
-//	  int num_of_columns = Get_num_of_columns(Shell_i);
-//	  //printf("last push %d\n", Rels[i]);
-//      Insert_Rel_Node(i, Table, Queue, -1);
-//	  return Queue;
-//    }
-//  }
-//  return NULL;
-//}
-//
-//static int Exists_better_combo(HT Best_Tree, Rel_Queue_Ptr Current_Queue, int num_of_rel) {
-//  Rel_Queue_Ptr *Table = Best_Tree.Table;
-//  for(int i = 0; i < Best_Tree.counter; i++) {
-//	if(Table[i]) {
-//    //  printf("check %d\n", Table[i]->head->rel);
-//      if(Table[i] == Current_Queue) continue;
-//      if(Table[i]->f <= Current_Queue->f) return 1;
-//	}
-//  }
-//  return 0;
-//}
-//
-//static int Choose_Best_Queue(HT Best_Tree) {
-//  Rel_Queue_Ptr *Table = Best_Tree.Table;
-//  int64_t min = INT64_MAX;
-//  int best = 0;
-//  for(int i = 0; i < Best_Tree.counter; i++) {
-//    if(Table[i]) {
-//	  //printf("check for best: \n");
-//      if(Table[i]->f < min) {
-//	    //printf("%lu\n", Table[i]->f);
-//        min = Table[i]->f;
-//	    best = i;
-//	  }
-//	}
-//  }
-//  return best;
-//}
-
-static Rel_Queue_Node_Ptr Find_Join_Rel(Rel_Queue_Ptr Queue, int rel1, int rel2) {
-  Rel_Queue_Node_Ptr pnode = Queue->head ;
-  while(pnode && pnode->rel != rel1 && pnode->rel != rel2) {
-  //while(pnode->next != Queue->tail) {
-    pnode = pnode->next;
-  }
-  return pnode;
-  //*prev = pnode;
-  //*last = Queue->tail;
-}
-
 static int Already_in_queue(Execution_Queue_Ptr Queue, Join_Ptr Join) {
 //	printf("check\t");
 //	Print_Join(Join);
@@ -391,11 +275,10 @@ static int Already_in_queue(Execution_Queue_Ptr Queue, Join_Ptr Join) {
   return 0;
 }
 
-//static Join_Ptr Find_best_combo(HT Tree, Execution_Queue_Node_Ptr Queue, Execution_Queue_Node_Ptr Pnode) {
 static int Find_best_combo(HT Tree, Execution_Queue_Node_Ptr Queue, Execution_Queue_Node_Ptr Pnode) {
   Join_Ptr Current = Pnode->Join;
-  printf("\n\n========\n------>");
-  Print_Join(Current);
+  //printf("\n\n========\n------>");
+  //Print_Join(Current);
   printf("\n");
 
   int64_t min = INT64_MAX;
@@ -404,10 +287,9 @@ static int Find_best_combo(HT Tree, Execution_Queue_Node_Ptr Queue, Execution_Qu
 
   //check every other join
   for(int i = 0; i < Tree.counter; i++) {
+	
+	if(Tree.Table[i]->head == NULL) continue;
     Join_Ptr Join_i = Tree.Table[i]->head->Join;
-	//printf("check %d:\t", i);
-	//Print_Join(Join_i);
-	//printf("\n");
     
 	if(Already_in_queue(Queue, Join_i)) {
 	  //printf("nop\n");
@@ -419,12 +301,12 @@ static int Find_best_combo(HT Tree, Execution_Queue_Node_Ptr Queue, Execution_Qu
 	  //printf("Join #%d is connected with some rel from queue\n", i);
      
 	  //Compute Join stats
-      //int64_t f = Compute_Join_Stats(Tree.Table[i]->head);
-
 	  //Change relation's stats
+      //Compute_Join_Stats(Pnode, Tree.Table[i]->head);
+
       int64_t f = Get_Join_stats1_f(Tree.Table[i]->head, 0);
-	  Print_Join(Tree.Table[i]->head->Join);
-      printf("with f %lu\n", f);
+	  //Print_Join(Tree.Table[i]->head->Join);
+      //printf("with f %lu\n", f);
 	  //Compare f
       if(f < min) {
         min = f;
@@ -435,10 +317,9 @@ static int Find_best_combo(HT Tree, Execution_Queue_Node_Ptr Queue, Execution_Qu
 	else continue;
   }
   if(best) {
-    printf("found %d:   ", index);
-    Print_Join(best);
-    printf(" with f = %lu\n", min);
-    //Insert_Node(index, Table, Queue, min);
+    //printf("found %d:   ", index);
+    //Print_Join(best);
+    //printf(" with f = %lu\n", min);
 
 	Execution_Queue_Node_Ptr best_node = Tree.Table[index]->head;
 	Stats_Ptr stats1 = Get_Node_stats1(best_node);
@@ -478,12 +359,15 @@ static Execution_Queue_Ptr Prepare_Queue(Parsed_Query_Ptr Parsed_Query, Table_Pt
 
   int64_t best_f = INT64_MAX;
   int best_queue = 0;
-  for(int i = 0; i < num_of_joins; i++) {
-    Best_Tree.Table[i] = Create_Execution_Queue();
-    Best_Tree.counter++;
-
-    printf("\n");
+  int i = 0;
+  while(i < num_of_joins) {
     Join_Ptr Current = Get_Join_by_index(Joins, i);
+
+    if(Is_Self_Join(Current)) {
+	  i++;
+	  continue;
+	}
+    Best_Tree.Table[Best_Tree.counter] = Create_Execution_Queue();
 
 	//get stats
     Shell_Ptr Shell1, Shell2;
@@ -494,17 +378,18 @@ static Execution_Queue_Ptr Prepare_Queue(Parsed_Query_Ptr Parsed_Query, Table_Pt
 	Stats_Ptr stats2 = Get_Shell_stats(Shell2);
 	uint64_t num_of_columns2 = Get_num_of_columns(Shell2);
 
-    //Insert_Node(Current, Best_Tree.Table[i]);
-    Insert_Node(Current, Best_Tree.Table[i], stats1, stats2, num_of_columns1, num_of_columns2);
-    //Insert_Rel_Node(i, Table, Best_Tree.Table[i], -1);
-	Update_Join_Stats(Best_Tree.Table[i]->head);
+    Insert_Node(Current, Best_Tree.Table[Best_Tree.counter], stats1, stats2, num_of_columns1, num_of_columns2);
+	Update_Join_Stats(Best_Tree.Table[Best_Tree.counter]->head);
 
-	Print_Join(Best_Tree.Table[i]->head->Join);
-	int64_t f = Get_Join_stats1_f(Best_Tree.Table[i]->head, 0);
+	Print_Join(Best_Tree.Table[Best_Tree.counter]->head->Join);
+	int64_t f = Get_Join_stats1_f(Best_Tree.Table[Best_Tree.counter]->head, 0);
     printf("\tinserted ");
     printf("with f = %lu\n", f);
+    Best_Tree.counter++;
+	i++;
   }
  
+  int counter =  Best_Tree.counter;
   int found_better = 0;
   for(int i = 0; i < Best_Tree.counter; i++) {
     int not_possible_path = 0;
@@ -516,7 +401,6 @@ static Execution_Queue_Ptr Prepare_Queue(Parsed_Query_Ptr Parsed_Query, Table_Pt
 	//find all possible paths
     for(int j = 1; j < Best_Tree.counter; j++) {
       Execution_Queue_Node_Ptr Current_Node = Best_Tree.Table[i]->tail;
-	  //Join_Ptr Join = Find_best_combo(Best_Tree.Table[i], Parsed_Query, Table);
       if(!Find_best_combo(Best_Tree, Best_Tree.Table[i], Current_Node)) {
 		not_possible_path = 1;
 	    break;
@@ -529,68 +413,21 @@ static Execution_Queue_Ptr Prepare_Queue(Parsed_Query_Ptr Parsed_Query, Table_Pt
       best_f = f;
       best_queue = i;
 	}
-
-	  //if we have already found a better combination to start with
-	  //delete this one
-	  //if(Exists_better_combo(Best_Tree, Best_Tree.Table[i], num_of_rel)) {
-	  //  printf("better combo exists\n");
-	  //  found_better = 1;
-	  //  Delete_Rel_Queue(Best_Tree.Table[i]);
-      //  Best_Tree.Table[i] = NULL;
-	  //  break;
-	  //} else {
-	  //  Print_Join(Join);
-	  //  printf("\n");
-	  //  //printf("passed better combo exists\n");
-	  //  //at this point we have to update the join-stats
-	  //  //but temporarily since we are not sure
-	  //  //we ll follow this path
-	  //  //so we keep a struct with the stats for each node
-	  //  Update_Join_Stats(Join, Best_Tree.Table[i], Rels, num_of_rel);
-	  //}
-	//if(found_better) continue;
   }
   printf("BEST EX QUEUE is #%d with f = %lu\n", best_queue, best_f);
-  Print_Queue(Best_Tree.Table[best_queue]);
-
+  //Print_Queue(Best_Tree.Table[best_queue]);
+  return(Best_Tree.Table[best_queue]);
 }
 
 
-
-
-//static void Fill_Execution_Queue(Parsed_Query_Ptr Parsed_Query,\
-//Execution_Queue_Ptr Execution_Queue, Rel_Queue_Ptr Rel_Queue) {
-//  int *Rels = Get_Relations(Parsed_Query);
-//  int num_of_rel = Get_Num_of_Relations(Parsed_Query);
-//
-//  //Print_Rel_Queue(Rel_Queue);
-//  Rel_Queue_Node_Ptr pnode = Rel_Queue->head;
-// 
-//  Join_Ptr Joins = Get_Joins(Parsed_Query);
-//  int num_of_joins = Get_Num_of_Joins(Parsed_Query);
-//
-//  int prev;
-//  while(pnode && pnode->next) { 
-//    int rel1 = pnode->rel;
-//    int rel2 = pnode->next->rel;
-//	
-//    Join_Ptr Join;
-//	while(1) {
-//	  //printf("JOIN: %d = %d\n", rel1, rel2);
-//	  Join = Find_Join(Joins, rel1, rel2, num_of_joins);
-//	  if(Join) break;
-//	  rel1 = prev;
-//	}
-//    //Print_Join(Join);
-//	printf("\n");
-//    Insert_Node(Join, Execution_Queue);
-//
-//    pnode = pnode->next;
-//    prev = rel1;
-//  }
-//  //printf("END\n");
-//
-//}
+static void Merge_Execution_Queues(Execution_Queue_Ptr Queue1, Execution_Queue_Ptr Queue2) {
+  if(Queue1->tail) {
+    Queue1->tail->next = Queue2->head;
+  } else {
+    Queue1->head = Queue2->head;
+  }
+  Queue1->tail = Queue2->tail;
+}
 
 ///////////////////////////////////////		TILL HERE		///////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -609,9 +446,10 @@ Execution_Queue_Ptr Prepare_Execution_Queue(Parsed_Query_Ptr Parsed_Query, Table
 
   //2.Optimizer
   //Rel_Queue_Ptr Rel_Queue = Prepare_Rel_Queue(Parsed_Query, Table);
-  Prepare_Queue(Parsed_Query, Table);
-  //Fill_Execution_Queue(Parsed_Query, Execution_Queue, Rel_Queue);
-  //Print_Queue(Execution_Queue);
+  Execution_Queue_Ptr Queue = Prepare_Queue(Parsed_Query, Table);
+  Print_Queue(Queue);
+  Merge_Execution_Queues(Execution_Queue, Queue);
+  Print_Queue(Execution_Queue);
 
   return Execution_Queue;
 }
