@@ -7,7 +7,7 @@
 
 
 int main(int argc, char** argv){
-  //clock_t start = clock();
+  clock_t start,end;
   Arg_Manager_Ptr Manager = Create_ArgManager(argc,argv);
   Argument_Data_Ptr Arg_Data = Get_Argument_Data(Manager);
 
@@ -15,9 +15,14 @@ int main(int argc, char** argv){
   Table_AllocatorPtr Table_Allocator = Create_Table_Allocator(Arg_Data);
   Table_Ptr Table = Allocate_Table(Table_Allocator);
   Fill_Table(Table, Table_Allocator);
-  Print_Table(Table);
+
+  start = clock();
 
   Start_Work(Table, Arg_Data);
+
+  end = clock();
+  double cpu_time_used = (((double) (end - start)) / CLOCKS_PER_SEC);
+  printf("TOTAL TIME: %f\n",cpu_time_used);
 
   Delete_ArgManager(Manager);
   Delete_Argument_Data(Arg_Data);
@@ -25,10 +30,6 @@ int main(int argc, char** argv){
   Delete_Table(Table);
 
   return 0;
-//  sleep(2);
-//  clock_t diff = clock() - start;
-//  printf("Diff: %d\n", diff);
-//  double time_taken = ((double)diff)/CLOCKS_PER_SEC; // in seconds
-//  printf("TIME: %f\n", time_taken);
+
 }
 
