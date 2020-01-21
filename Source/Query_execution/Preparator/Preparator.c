@@ -45,36 +45,6 @@ static void Check_For_Self_joins(Parsed_Query_Ptr Parsed_Query,Execution_Queue_P
 }
 
 
-/////////////////////////////	STATS	///////////////////////////////////////////
-static int64_t Compute_Join_Stats(Execution_Queue_Node_Ptr Pnode) {
-
-  Join_Ptr Join = Pnode->Join;
-  if(Is_Self_Join(Join)) return -1;
-  
-  //get relations and columns
-  int rel1 = Get_Relation_1(Join);
-  int rel2 = Get_Relation_2(Join);
-  int col1 = Get_Column_1(Join);
-  int col2 = Get_Column_2(Join);
-
-  uint64_t u = Get_Join_stats2_u(Pnode, col2);
-  if(u > Get_Join_stats1_u(Pnode, col1))
-    u = Get_Join_stats1_u(Pnode, col1);
-  uint64_t l = Get_Join_stats2_l(Pnode, col2);
-  if(Get_Join_stats1_l(Pnode, col1) > l)
-    l = Get_Join_stats1_l(Pnode, col1);
-
-  //get f
-  int64_t fa = Get_Join_stats1_f(Pnode, col1);
-  int64_t fb = Get_Join_stats2_f(Pnode, col2);
-
-  //compute f
-  uint64_t n = u - l + 1;
-  int64_t f = 0;
-  if(fa && fb) f = fa * fb / n;
-
-  return f;
-}
 
 static void Update_Join_Stats(Execution_Queue_Node_Ptr Pnode) {
   Join_Ptr Join = Pnode->Join;
@@ -175,10 +145,6 @@ static int Find_best_combo(HT Tree, Execution_Queue_Node_Ptr Queue, Execution_Qu
 
 	//if they are connected we find the particular join
     if(Check_if_joins_Connect(Current, Join_i)) {
-
-	  //Compute Join stats
-	  //Change relation's stats
-      //Compute_Join_Stats(Pnode, Tree.Table[i]->head);
 
       int64_t f = Get_Join_stats1_f(Tree.Table[i]->head, 0);
 	  //Compare f
