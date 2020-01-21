@@ -194,7 +194,6 @@ void Setup_Column_Pointers(Tuple_Ptr* Array,int num_of_columns,int num_of_tuples
 }
 
 
-
 static void Fill_Shell(const char* FileName, Shell_Ptr Shell){
 
   //1. open file

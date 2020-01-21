@@ -18,6 +18,7 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp, uint64_t **Result
   //execute filters first
   Execute_Filters(New_Table, Parsed_Query);
 
+
   //2.do the preparations
   Execution_Queue_Ptr Queue = Prepare_Execution_Queue(Parsed_Query, New_Table);
   //Print_Queue(Queue);
@@ -36,7 +37,7 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp, uint64_t **Result
   Delete_Queue(Queue);
   Delete_Parsed_Query(Parsed_Query);
   Delete_Table(New_Table);
-//  if(Res!=NULL)
-//    Delete_intermediate_Result(Res);
+  if(Res!=NULL)
+    Delete_intermediate_Result(Res);
 }
 
