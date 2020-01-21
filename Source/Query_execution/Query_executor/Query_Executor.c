@@ -23,11 +23,11 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp, uint64_t **Result
   //Print_Queue(Queue);
 
   //execute joins
-  Intermediate_Result_Ptr Res = Execute_Joins(Queue,New_Table,Table,relations);
-//  Print_Intermediate(Res,"int");
+  //Intermediate_Result_Ptr Res = Execute_Joins(Queue,New_Table,Table,relations);
+  //Print_Intermediate(Res,"int");
 
   //do projections
-  Execute_Projections(Res, Parsed_Query, Table, Results_array, query_id);
+  //Execute_Projections(Res, Parsed_Query, Table, Results_array, query_id);
  
   //printf("q_id = %d\n", query_id);
   //Results_array[0][query_id] = query_id;
@@ -36,7 +36,7 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp, uint64_t **Result
   Delete_Queue(Queue);
   Delete_Parsed_Query(Parsed_Query);
   Delete_Table(New_Table);
-  if(Res!=NULL)
-    Delete_intermediate_Result(Res);
+  //if(Res!=NULL)
+  //  Delete_intermediate_Result(Res);
 }
 

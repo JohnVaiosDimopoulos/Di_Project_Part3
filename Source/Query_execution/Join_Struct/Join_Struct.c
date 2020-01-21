@@ -10,7 +10,7 @@ struct Join{
 };
 
 void Print_Join(Join_Ptr Join){
-  printf("%d.%d = %d.%d",
+  printf("%d.%d = %d.%d ",
          Join->rel1,
          Join->col1,
          Join->rel2,

@@ -25,6 +25,7 @@ void Set_Shell_Array(Shell_Ptr, Tuple_Ptr *);
 void Set_Shell_num_of_tuples(Shell_Ptr, int);
 
 Shell_Ptr Get_Table_Array(Table_Ptr);
+int Get_num_of_shells(Table_Ptr);
 Shell_Ptr Get_Shell_by_index(Shell_Ptr,int);
 
 uint64_t Get_num_of_tuples(Shell_Ptr);
@@ -42,6 +43,7 @@ void Delete_Table_Allocator(Table_AllocatorPtr);
 void Delete_Table(Table_Ptr);
 //void Print_Relation(Tuple_Ptr*,int,int);
 
+uint64_t Get_Shell_stats(Shell_Ptr);
 uint64_t Get_Column_l(Shell_Ptr, uint64_t);
 uint64_t Get_Column_u(Shell_Ptr, uint64_t);
 int64_t Get_Column_f(Shell_Ptr, uint64_t);
