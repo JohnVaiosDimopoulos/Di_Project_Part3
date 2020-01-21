@@ -276,7 +276,7 @@ void Fill_Table(Table_Ptr Table, Table_AllocatorPtr Table_Allocator) {
     free(file_Path);
     free(File_Name);
   }
-  fclose(Init_File);
+  //fclose(Init_File);
   free(line_buffer);
   free(Init_File_Path);
 }

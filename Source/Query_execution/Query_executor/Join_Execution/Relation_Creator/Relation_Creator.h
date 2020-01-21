@@ -13,6 +13,6 @@ Tuple_Ptr Get_Tuples(RelationPtr Relation);
 void Delete_Relation(RelationPtr);
 
 //For exhibition purposes only
-void Print_Relation(RelationPtr Relation);
+void Print_Relation(RelationPtr Relation, char *name);
 
 #endif //SORT_JOIN_RELATION_CREATOR_H

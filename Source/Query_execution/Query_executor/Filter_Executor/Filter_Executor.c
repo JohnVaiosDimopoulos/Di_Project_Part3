@@ -1,6 +1,5 @@
 #include "Filter_Executor.h"
 #include "string.h"
-#include <stdbool.h> 
 
 //struct Tuple{
 //  uint64_t element;
@@ -8,7 +7,8 @@
 //};
 
 
-static int Execute(Tuple_Ptr *New, Shell_Ptr Shell, Filter_Ptr Filter, FILE *fp) {
+
+static int Execute(Tuple_Ptr *New, Shell_Ptr Shell, Filter_Ptr Filter) {
 
   //get filter content
   int rel = Get_Filter_Relation(Filter);
@@ -22,8 +22,7 @@ static int Execute(Tuple_Ptr *New, Shell_Ptr Shell, Filter_Ptr Filter, FILE *fp)
 
     Tuple_Ptr current = Get_Shell_Array_by_index(Shell, col, i);
 	uint64_t data_to_check = Get_Data(current);
-	//printf("%llu\n", data_to_check);
-    
+
     switch(type[0]) {
       case '<':
         if(data_to_check < con) {
@@ -163,7 +162,6 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
   int num_of_filters = Get_Num_of_Filters(Parsed_Query);
 
   if(num_of_filters) {
-	FILE *fp = fopen("test", "w");
     for (int i = 0; i < num_of_filters; i++) {
       Filter_Ptr Filter = Get_Filter_by_index(Get_Filters(Parsed_Query), i);
       int rel = Get_Filter_Relation(Filter);
@@ -176,18 +174,20 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
       New[0]= (Tuple_Ptr)malloc((num_of_columns * num_of_tuples)* sizeof(struct Tuple));
       Setup_Column_Pointers(New, num_of_columns, num_of_tuples);
 
-      int tuples = Execute(New, Shell, Filter, fp);
-//	  printf("%d tuples passed\n", tuples);
+      int tuples = Execute(New, Shell, Filter);
 
       //point to the new (smaller) array
       Tuple_Ptr *temp = Get_Shell_Array(Shell);
 	  Set_Shell_Array(Shell, New);
+	  Set_Shell_num_of_tuples(Shell, tuples);
+
 	  //delete old shell
       free(temp[0]);
       free(temp);
 	  //update shell stats
 	  //printf("%llu %llu\n", Get_num_of_tuples(Shell), Get_num_of_columns(Shell));
 	  Update_Stats(Shell, Filter, tuples);
+
 
 	  //just for checking
 //	  int j = 0;
@@ -206,7 +206,6 @@ void Execute_Filters(Table_Ptr Table, Parsed_Query_Ptr Parsed_Query) {
 //        }
 //      }
     }
-	fclose(fp);
 	return;
   }
   printf("QUERY HAS NO FILTERS\n");
