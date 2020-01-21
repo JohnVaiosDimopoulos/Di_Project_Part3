@@ -68,6 +68,10 @@ Shell_Ptr Get_Table_Array(Table_Ptr Table) {
 	return Table->Array;
 }
 
+int Get_num_of_shells(Table_Ptr Table) {
+	return Table->num_of_shells;
+}
+
 static char* Get_File_Name(char* line_buffer, int size) {
   char* file_Name = malloc(sizeof(char)*size);
   sscanf(line_buffer, "%s\n", file_Name);
@@ -352,6 +356,9 @@ Tuple_Ptr Get_Column(Shell_Ptr Shell,int column_id){
   return Shell->Array[column_id];
 }
 
+uint64_t Get_Shell_stats(Shell_Ptr Shell){
+  return Shell->stats;
+}
 
 uint64_t Get_Column_l(Shell_Ptr Shell, uint64_t i){
   //printf("from getter %llu %llu\n", Shell->num_of_tuples, Shell->num_of_columns);
