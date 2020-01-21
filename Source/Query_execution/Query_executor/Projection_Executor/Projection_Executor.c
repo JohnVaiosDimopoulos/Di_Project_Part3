@@ -7,6 +7,9 @@
 #include <stdlib.h>
 
 void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr Parsed_Query, Table_Ptr Table, uint64_t **Results_array, int query_id) {
+
+  FILE* fp;
+  Open_File_for_Write(&fp,"temp");
   int num_of_proj = Get_Num_of_Projections(Parsed_Query);
   Projection_Ptr Proj = Get_Projections(Parsed_Query);
 
@@ -28,7 +31,8 @@ void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr Parsed_Qu
 	  Shell_Ptr Shell = Get_Table_Array(Table);
 	  Shell_Ptr current_shell = Get_Shell_by_index(Shell, initial_rel);
 
-	  uint64_t sum = 0;
+
+      uint64_t sum = 0;
 
       //if this relation is in the intermediate struct
 	  if(Res->relations_in_result[rel]) {
@@ -36,23 +40,19 @@ void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr Parsed_Qu
         int index;
         for(int k = 0; k < Res->num_of_relations; k++) {
           if(Res->row_ids[0][k].relation == rel) {
-		    index = Res->row_ids[0][k].relation;
+		    index = k;
 		    break;
 		  }
 		}
 	    //copy result_row_ids
-		uint64_t* result_row_ids=malloc(num_of_res* sizeof(uint64_t));
         for(int j = 0; j < num_of_res; j++){
-          result_row_ids[j] = row_ids[j][index].row_id;
-	      Tuple_Ptr current_tuple = Get_Shell_Array_by_index(current_shell, col, result_row_ids[j]);
+	      Tuple_Ptr current_tuple = Get_Shell_Array_by_index(current_shell, col, row_ids[j][index].row_id);
 	      sum += current_tuple->element;
       }
-        free(result_row_ids);
+
 	  } else {
-        printf("doesnt exist\n");
 		return;
       }
-      //fprintf(fp, "%llu ", sum);
       Results_array[i][query_id] = sum;
 
 
