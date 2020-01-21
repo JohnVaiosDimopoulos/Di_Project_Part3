@@ -8,8 +8,6 @@
 
 void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr Parsed_Query, Table_Ptr Table, uint64_t **Results_array, int query_id) {
 
-  FILE* fp;
-  Open_File_for_Write(&fp,"temp");
   int num_of_proj = Get_Num_of_Projections(Parsed_Query);
   Projection_Ptr Proj = Get_Projections(Parsed_Query);
 
@@ -58,7 +56,5 @@ void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr Parsed_Qu
 
     } else
       Results_array[i][query_id] = 0;
-	// fprintf(fp, "NULL ");
   }
-  //fprintf(fp, "\n");
 }
