@@ -6,7 +6,7 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define LIMIT 13
+#define LIMIT 3
 
 int end_of_batch = 0;
 int end = 0;
@@ -147,7 +147,7 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
     Delete_Batch(Current_Batch);
 	for(int i = 0; i < 4; i++)
       free(Results_array[i]);
-    break;
+//    break;
   }
   //Wake all threads
   for(int i = 0; i < LIMIT; i++) {
