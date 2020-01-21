@@ -5,7 +5,7 @@
 #include "Relation_Sorting/Relation_Sorting.h"
 #include "Join/Join.h"
 #include <stdlib.h>
-
+#include "../../../Util/Utilities.h"
 
 
 
@@ -15,28 +15,29 @@ Intermediate_Result_Ptr Create_Intermediate_Result(){
   for(int i =0;i<4;i++)
     Intermediate_Result->relations_in_result[i]=0;
   Intermediate_Result->row_ids=NULL;
-  Intermediate_Result->old_Relation1=NULL;
-  Intermediate_Result->old_Relation2=NULL;
+  Intermediate_Result->Used_Columns=Create_Columns_list();
   return Intermediate_Result;
 }
 
 void Delete_intermediate_Result(Intermediate_Result_Ptr Intermediate_Result){
-  Delete_Relation(Intermediate_Result->old_Relation1);
-  Delete_Relation(Intermediate_Result->old_Relation2);
   for(int i =0;i<Intermediate_Result->num_of_results;i++){
     free(Intermediate_Result->row_ids[i]);
   }
+  Delete_Columns_list(Intermediate_Result->Used_Columns);
   free(Intermediate_Result->row_ids);
   free(Intermediate_Result);
 }
 
-void Print_Intermediate(Intermediate_Result_Ptr Intermediate_Result){
+void Print_Intermediate(Intermediate_Result_Ptr Intermediate_Result, char *name) {
+  FILE* fp;
+  Open_File_for_Write(&fp,name);
   for(int i =0;i<Intermediate_Result->num_of_results;i++){
     for(int j =0;j<Intermediate_Result->num_of_relations;j++){
-      printf("rel:%d,rowId:%llu|",Intermediate_Result->row_ids[i][j].relation,Intermediate_Result->row_ids[i][j].row_id);
+      fprintf(fp,"rel:%d,rowId:%llu|",Intermediate_Result->row_ids[i][j].relation,Intermediate_Result->row_ids[i][j].row_id);
     }
-    printf("\n");
+    fprintf(fp,"\n");
   }
+  fclose(fp);
 }
 
 static Tuple_Ptr* Get_Array_of_data_from_table(Table_Ptr   Relations ,int relation_id,int* num_of_tuples){
@@ -72,9 +73,14 @@ static RelationPtr Make_Relation_From_Table(Table_Ptr Relations,int rel,int col)
     Rel[i].element=Array[col][i].element;
     Rel[i].row_id=Array[col][i].row_id;
   }
-  if(num_of_tuples==0)
+  if(num_of_tuples==0){
+    free(Rel);
     return NULL;
+  }
+
   RelationPtr Final_Relation=Create_Relation_with_given_array(num_of_tuples,Rel);
+  Rel=NULL;
+  free(Rel);
   return Final_Relation;
 }
 
@@ -93,14 +99,13 @@ static RelationPtr Make_Relation_From_Intermediate_Array(Table_Ptr Relations,Int
   }
 
   RelationPtr Final_Relation=Create_Relation_with_given_array(Intermediate_Result->num_of_results,Rel);
+  Rel=NULL;
+  free(Rel);
   return Final_Relation;
 
 }
 
 static void Execute_Self_Join(Join_Ptr Join,Table_Ptr Relations) {
-  printf("SELF JOIN...\n");
-  Print_Join(Join);
-  printf("\n");
 
   int relation = Get_Relation_1(Join);
   int column_1 = Get_Column_1(Join);
@@ -209,19 +214,22 @@ static void Execute_Scan_Join(Join_Ptr Join,Intermediate_Result_Ptr Intermediate
 
   Intermediate_Result->num_of_results=num_of_results;
 
-  Intermediate_Result->old_Relation1=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_1,col_1,relations_map);
-  Intermediate_Result->old_Relation2=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_2,col_2,relations_map);
 }
 
 static void Setup_Intermediate_Result(Intermediate_Result_Ptr Intermediate_Result,List_Ptr List,int new_rel){
+
+
+
 
   struct Result** result = malloc(Get_num_of_results(List)*sizeof(struct Result*));
   for(int i =0;i<Get_num_of_results(List);i++)
     result[i]=malloc((Intermediate_Result->num_of_relations+1)*sizeof(struct Result));
 
-  Node_Ptr temp = Get_head(List);
 
+  Node_Ptr temp = Get_head(List);
   int result_counter=0;
+
+
   while (temp!=NULL){
 
     for(int i =0;i<temp->counter;i++){
@@ -241,10 +249,10 @@ static void Setup_Intermediate_Result(Intermediate_Result_Ptr Intermediate_Resul
 
   }
 
-  Delete_List(List);
 
   struct Result** des = Intermediate_Result->row_ids;
   Intermediate_Result->row_ids=result;
+
 
   for(int i =0;i<Intermediate_Result->num_of_results;i++){
     free(des[i]);
@@ -254,6 +262,8 @@ static void Setup_Intermediate_Result(Intermediate_Result_Ptr Intermediate_Resul
   Intermediate_Result->num_of_results=Get_num_of_results(List);
   Intermediate_Result->relations_in_result[new_rel]=1;
   Intermediate_Result->num_of_relations++;
+
+
 }
 
 static void Execute_Normal_Join(Join_Ptr Current_Join,Intermediate_Result_Ptr Intermediate_Result,Table_Ptr Relations,Table_Ptr Original_Relations,int *relations_map) {
@@ -268,65 +278,68 @@ static void Execute_Normal_Join(Join_Ptr Current_Join,Intermediate_Result_Ptr In
 
   if(Intermediate_Result->relations_in_result[Get_Relation_1(Current_Join)]==1){
 
-    Final_Relation_1 = Make_Relation_From_Table(Relations,rel_2,col_2);
-    Final_Relation_2 = Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_1,col_1,relations_map);
-//    Print_Relation(Final_Relation_2);
-
-    if(Final_Relation_1==NULL || Final_Relation_2==NULL){
+    if((Final_Relation_1 = Make_Relation_From_Table(Relations,rel_2,col_2))==NULL){
       Intermediate_Result->row_ids=NULL;
       return;
     }
+    Final_Relation_2 = Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_1,col_1,relations_map);
 
 
     Sort(Final_Relation_1);
-    Sort(Final_Relation_2);
+    if(!is_in_list(Intermediate_Result->Used_Columns,rel_1,col_1))
+      Sort(Final_Relation_2);
 
     List=Execute_Join(Final_Relation_1,Final_Relation_2);
     Delete_Relation(Final_Relation_1);
     Delete_Relation(Final_Relation_2);
     Setup_Intermediate_Result(Intermediate_Result,List,rel_2);
-
-    Intermediate_Result->old_Relation1=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_1,col_1,relations_map);
-    Intermediate_Result->old_Relation2=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_2,col_2,relations_map);
-
+    Delete_List(List);
   }
 
 
 
   else if(Intermediate_Result->relations_in_result[Get_Relation_2(Current_Join)]==1){
-    Final_Relation_1 = Make_Relation_From_Table(Relations,rel_1,col_1);
-    Final_Relation_2 = Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_2,col_2,relations_map);
-
-    if(Final_Relation_1==NULL || Final_Relation_2==NULL){
+    if((Final_Relation_1 = Make_Relation_From_Table(Relations,rel_1,col_1))==NULL){
       Intermediate_Result->row_ids=NULL;
       return;
     }
+    Final_Relation_2 = Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_2,col_2,relations_map);
+
+    Sort(Final_Relation_1);
+    if(!is_in_list(Intermediate_Result->Used_Columns,rel_2,col_2))
+      Sort(Final_Relation_2);
+
 
 
     List = Execute_Join(Final_Relation_1,Final_Relation_2);
     Delete_Relation(Final_Relation_1);
     Delete_Relation(Final_Relation_2);
     Setup_Intermediate_Result(Intermediate_Result,List,rel_1);
-    Intermediate_Result->old_Relation1=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_1,col_1,relations_map);
-    Intermediate_Result->old_Relation2=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_2,col_2,relations_map);
-
+    Delete_List(List);
 
   }
 
 
 
   else{
-    Final_Relation_1= Make_Relation_From_Table(Relations,rel_1,col_1);
-    Final_Relation_2= Make_Relation_From_Table(Relations,rel_2,col_2);
 
-    if(Final_Relation_1==NULL || Final_Relation_2==NULL){
+    if((Final_Relation_1= Make_Relation_From_Table(Relations,rel_1,col_1))==NULL){
+      Intermediate_Result->row_ids=NULL;
+      return;
+    }
+
+    if((Final_Relation_2= Make_Relation_From_Table(Relations,rel_2,col_2))==NULL){
+      Delete_Relation(Final_Relation_1);
       Intermediate_Result->row_ids=NULL;
       return;
     }
 
 
+
+
     Sort(Final_Relation_1);
     Sort(Final_Relation_2);
+
 
     List_Ptr List = Execute_Join(Final_Relation_1,Final_Relation_2);
     Delete_Relation(Final_Relation_1);
@@ -366,72 +379,10 @@ static void Execute_Normal_Join(Join_Ptr Current_Join,Intermediate_Result_Ptr In
     Intermediate_Result->relations_in_result[rel_1]=1;
     Intermediate_Result->relations_in_result[rel_2]=1;
 
-
-    Intermediate_Result->old_Relation1=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_1,col_1,relations_map);
-    Intermediate_Result->old_Relation2=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_2,col_2,relations_map);
   }
 
 
 }
-
-static void Execute_Same_Column_Join(Join_Ptr Current_Join,Join_Ptr Last_Join,Intermediate_Result_Ptr Intermediate_Result,Table_Ptr Relations,Table_Ptr Original_Relations,int *relations_map){
-
-  int rel_1 = Get_Relation_1(Current_Join);
-  int col_1 = Get_Column_1(Current_Join);
-  int rel_2 = Get_Relation_2(Current_Join);
-  int col_2 = Get_Column_2(Current_Join);
-
-  RelationPtr Final_Relation_1,Final_Relation_2;
-  List_Ptr List;
-
-  if(Intermediate_Result->relations_in_result[rel_1]==1){
-    if(rel_1==Get_Relation_1(Last_Join)&&col_1==Get_Column_1(Last_Join)){
-      Final_Relation_2=Intermediate_Result->old_Relation1;
-    }
-    else{
-      Final_Relation_2=Intermediate_Result->old_Relation2;
-    }
-    Final_Relation_1=Make_Relation_From_Table(Relations,rel_2,col_2);
-    if(Final_Relation_1==NULL || Final_Relation_2==NULL){
-      Intermediate_Result->row_ids=NULL;
-      return;
-    }
-
-    Sort(Final_Relation_1);
-
-    List = Execute_Join(Final_Relation_1,Final_Relation_2);
-    Delete_Relation(Final_Relation_1);
-    Delete_Relation(Final_Relation_2);
-    Setup_Intermediate_Result(Intermediate_Result,List,rel_2);
-    Intermediate_Result->old_Relation1=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_1,col_1,relations_map);
-    Intermediate_Result->old_Relation2=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_2,col_2,relations_map);
-
-  }
-  else if (Intermediate_Result->relations_in_result[rel_2]==1){
-    Final_Relation_1=  Make_Relation_From_Table(Relations,rel_1,col_1);
-    if(rel_2==Get_Relation_1(Last_Join)&& col_2==Get_Column_1(Last_Join))
-      Final_Relation_2=Intermediate_Result->old_Relation1;
-    else
-      Final_Relation_2=Intermediate_Result->old_Relation2;
-
-    if(Final_Relation_1==NULL || Final_Relation_2==NULL){
-      Intermediate_Result->row_ids=NULL;
-      return;
-    }
-
-    Sort(Final_Relation_1);
-
-    List = Execute_Join(Final_Relation_1,Final_Relation_2);
-    Delete_Relation(Final_Relation_1);
-    Delete_Relation(Final_Relation_2);
-    Setup_Intermediate_Result(Intermediate_Result,List,rel_1);
-    Intermediate_Result->old_Relation1=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_1,col_1,relations_map);
-    Intermediate_Result->old_Relation2=Make_Relation_From_Intermediate_Array(Original_Relations,Intermediate_Result,rel_2,col_2,relations_map);
-
-  }
-
-}
-
 
 static void Update_Stats_for_Self_Join(Table_Ptr Table, Join_Ptr Join) {
 
@@ -502,12 +453,10 @@ static void Update_Stats_for_Self_Join(Table_Ptr Table, Join_Ptr Join) {
 //  }
 }
 
+
 Intermediate_Result_Ptr Execute_Joins(Execution_Queue_Ptr Execution_Queue, Table_Ptr Filtered_Relations,Table_Ptr Original_Relations,int* relation_map){
-  printf("EXECUTE JOINS...\n");
-  //sleep(1);
 
   Intermediate_Result_Ptr Intermediate_Result = Create_Intermediate_Result();
-  Join_Ptr Last_Join = NULL;
 
 
   for(Join_Ptr Current_Join = Pop_Next_join(Execution_Queue);
@@ -519,20 +468,21 @@ Intermediate_Result_Ptr Execute_Joins(Execution_Queue_Ptr Execution_Queue, Table
 	  Update_Stats_for_Self_Join(Filtered_Relations, Current_Join);
 	}
 
-    //else if(Check_if_relations_already_in_result(Current_Join,Intermediate_Result))
-    //  Execute_Scan_Join(Current_Join, Intermediate_Result, Original_Relations,relation_map);
-    //else if (Is_Same_Column_used(Current_Join,Last_Join)){
-    //  Execute_Same_Column_Join(Current_Join,Last_Join,Intermediate_Result,Filtered_Relations,Original_Relations,relation_map);
-    //}
-    //else{
-    //  Execute_Normal_Join(Current_Join,Intermediate_Result,Filtered_Relations,Original_Relations,relation_map);
-    //  if(Intermediate_Result->row_ids==NULL)
-    //    return  NULL;
-    //}
+    else if(Check_if_relations_already_in_result(Current_Join,Intermediate_Result))
+      Execute_Scan_Join(Current_Join, Intermediate_Result, Original_Relations,relation_map);
 
-    Last_Join=Current_Join;
+    else{
+      Execute_Normal_Join(Current_Join,Intermediate_Result,Filtered_Relations,Original_Relations,relation_map);
+      if(Intermediate_Result->row_ids==NULL){
+        Delete_intermediate_Result(Intermediate_Result);
+        return  NULL;
+      }
 
+    }
+    Insert_Column(Intermediate_Result->Used_Columns,Get_Relation_1(Current_Join),Get_Column_1(Current_Join));
+    Insert_Column(Intermediate_Result->Used_Columns,Get_Relation_2(Current_Join),Get_Column_2(Current_Join));
   }
   return Intermediate_Result;
 
 }
+

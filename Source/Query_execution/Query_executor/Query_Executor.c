@@ -27,15 +27,11 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp, uint64_t **Result
   //Print_Intermediate(Res);
 
   //do projections
-  //Execute_Projections(Res, Parsed_Query, Table, fp);
+  Execute_Projections(Res, Parsed_Query, Table, Results_array, query_id);
  
   //printf("q_id = %d\n", query_id);
-  Results_array[0][query_id] = query_id;
+  //Results_array[0][query_id] = query_id;
   
-  for(int j = 0; j < 4; j++) {
-    if(Results_array[j][query_id] != -1)
-      printf("\t-------------------->%llu\n", Results_array[j][query_id]);
-  }
 
   Delete_Queue(Queue);
   Delete_Parsed_Query(Parsed_Query);

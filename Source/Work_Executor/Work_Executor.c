@@ -140,14 +140,14 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
     for(int i = 0; i < num_of_queries; i++) {
       for(int j = 0; j < 4; j++) {
         if(Results_array[j][i] != -1)
-          fprintf(fp_write, "\t-------------------->%d ", Results_array[j][i]);
+          fprintf(fp_write, "%llu ", Results_array[j][i]);
       }
       fprintf(fp_write, "\n");
 	}
     Delete_Batch(Current_Batch);
 	for(int i = 0; i < 4; i++)
       free(Results_array[i]);
-//    break;
+    break;
   }
   //Wake all threads
   for(int i = 0; i < LIMIT; i++) {

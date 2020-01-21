@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <errno.h>
 #include "Histogram.h"
 
 struct Histogram{
@@ -17,6 +18,12 @@ static void Fill_Histogram(RelationPtr Relation, Histogram_Ptr Histogram, const 
 static Histogram_Ptr Create_And_Init_Histogram() {
 
   Histogram_Ptr Histogram = (Histogram_Ptr)malloc(sizeof(struct Histogram));
+  if(Histogram==NULL){
+    printf("Memory allocation failed\n");
+    if(errno == ENOMEM)
+      printf("no memory\n");
+  }
+
   for(int i =0;i<HISTOGRAM_SIZE;i++)
     Histogram->Array[i]=0;
   return Histogram;

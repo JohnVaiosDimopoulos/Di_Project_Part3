@@ -6,8 +6,7 @@
 #include "../Join_Execution/Join_Execution.h"
 #include <stdlib.h>
 
-void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr Parsed_Query, Table_Ptr Table, FILE *fp) {
-
+void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr Parsed_Query, Table_Ptr Table, uint64_t **Results_array, int query_id) {
   int num_of_proj = Get_Num_of_Projections(Parsed_Query);
   Projection_Ptr Proj = Get_Projections(Parsed_Query);
 
@@ -53,10 +52,13 @@ void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr Parsed_Qu
         printf("doesnt exist\n");
 		return;
       }
-      fprintf(fp, "%llu ", sum);
+      //fprintf(fp, "%llu ", sum);
+      Results_array[i][query_id] = sum;
 
 
-    } else fprintf(fp, "NULL ");
+    } else
+      Results_array[i][query_id] = 0;
+	// fprintf(fp, "NULL ");
   }
-  fprintf(fp, "\n");
+  //fprintf(fp, "\n");
 }

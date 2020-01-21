@@ -6,6 +6,7 @@
 #include "../Join_Execution/Join_Execution.h"
 
 
-void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr, Table_Ptr, FILE*);
+void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr, Table_Ptr, uint64_t**, int);
+//void Execute_Projections(Intermediate_Result_Ptr Res, Parsed_Query_Ptr, Table_Ptr, FILE*);
 
 #endif
