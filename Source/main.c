@@ -7,22 +7,25 @@
 
 
 int main(int argc, char** argv){
-  clock_t start,end;
+  struct timespec start,finish;
+  double time_elapsed;
   Arg_Manager_Ptr Manager = Create_ArgManager(argc,argv);
   Argument_Data_Ptr Arg_Data = Get_Argument_Data(Manager);
-
-
   Table_AllocatorPtr Table_Allocator = Create_Table_Allocator(Arg_Data);
   Table_Ptr Table = Allocate_Table(Table_Allocator);
   Fill_Table(Table, Table_Allocator);
+  printf("DONE READING DATA\n");
 
-  start = clock();
+
+  clock_gettime(CLOCK_MONOTONIC,&start);
 
   Start_Work(Table, Arg_Data);
 
-  end = clock();
-  double cpu_time_used = (((double) (end - start)) / CLOCKS_PER_SEC);
-  printf("TOTAL TIME: %f\n",cpu_time_used);
+  clock_gettime(CLOCK_MONOTONIC,&finish);
+
+  time_elapsed = (finish.tv_sec -start.tv_sec);
+  time_elapsed += (finish.tv_nsec - start.tv_nsec)/1000000000.0;
+  printf("TOTAL TIME: %f\n",time_elapsed);
 
   Delete_ArgManager(Manager);
   Delete_Argument_Data(Arg_Data);

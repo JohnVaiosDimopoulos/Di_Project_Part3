@@ -87,8 +87,11 @@ Tuple_Ptr Get_Tuples(RelationPtr Relation){
 
 
 void Delete_Relation(RelationPtr Relation){
-  free(Relation->tuples);
-  free(Relation);
+  if(Relation!=NULL){
+    free(Relation->tuples);
+    free(Relation);
+  }
+
 }
 
 void Print_Relation(RelationPtr Relation, char *name) {

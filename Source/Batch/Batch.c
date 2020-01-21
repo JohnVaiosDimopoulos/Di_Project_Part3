@@ -42,7 +42,6 @@ void Print_Batch(Batch_Ptr Batch) {
   printf("\n\tPRINT\n");
   Query_Ptr pnode = Batch->Queries;
   for(int i = 0; i < Batch->counter; i++) {
-    Print_Query(pnode);
     pnode = Get_Next(pnode);
   }
   printf("\n");

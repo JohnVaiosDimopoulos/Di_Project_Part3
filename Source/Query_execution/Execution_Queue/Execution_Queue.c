@@ -56,12 +56,10 @@ Execution_Queue_Ptr Create_Execution_Queue(){
   return Execution_Queue;
 }
 
-//Execution_Queue_Node_Ptr Create_New_Node(Join_Ptr Join) {
 Execution_Queue_Node_Ptr Create_New_Node(Join_Ptr Join, \
 Stats_Ptr stats1, Stats_Ptr stats2, uint64_t num_of_columns1, uint64_t num_of_columns2){
   Execution_Queue_Node_Ptr new_node = (Execution_Queue_Node_Ptr)malloc(sizeof(struct Execution_Queue_Node));
   new_node->Join=Join;
-  //Print_Join(new_node->Join);
   new_node->stats1 = (Stats_Ptr)malloc(num_of_columns1 * sizeof(struct Stats));
   for(int i = 0; i < num_of_columns1; i++) {
     new_node->stats1[i].l = stats1[i].l;
@@ -83,7 +81,6 @@ Stats_Ptr stats1, Stats_Ptr stats2, uint64_t num_of_columns1, uint64_t num_of_co
   return new_node;
 }
 
-//static void Insert_In_Empty_Queue(Join_Ptr Join, Execution_Queue_Ptr Execution_Queue) { 
 static void Insert_In_Empty_Queue(Join_Ptr Join, Execution_Queue_Ptr Execution_Queue, \
 Stats_Ptr stats1, Stats_Ptr stats2, uint64_t num_of_columns1, uint64_t num_of_columns2){
   Execution_Queue->head=Create_New_Node(Join, stats1, stats2, num_of_columns1, num_of_columns2);
@@ -91,26 +88,21 @@ Stats_Ptr stats1, Stats_Ptr stats2, uint64_t num_of_columns1, uint64_t num_of_co
   Execution_Queue->tail=Execution_Queue->head;
 }
 
-//static void Insert_At_End(Join_Ptr Join,Execution_Queue_Ptr Execution_Queue) {
 static void Insert_At_End(Join_Ptr Join,Execution_Queue_Ptr Execution_Queue, \
 Stats_Ptr stats1, Stats_Ptr stats2, uint64_t num_of_columns1, uint64_t num_of_columns2){
   Execution_Queue_Node_Ptr temp = Execution_Queue->tail;
   Execution_Queue_Node_Ptr new_node = Create_New_Node(Join, stats1, stats2, num_of_columns1, num_of_columns2);
-  //Execution_Queue_Node_Ptr new_node = Create_New_Node(Join);
 
   temp->next=new_node;
   Execution_Queue->tail=new_node;
 }
 
-//void Insert_Node(Join_Ptr Join, Execution_Queue_Ptr Execution_Queue) {
 void Insert_Node(Join_Ptr Join, Execution_Queue_Ptr Execution_Queue,\
 Stats_Ptr stats1, Stats_Ptr stats2, uint64_t num_of_columns1, uint64_t num_of_columns2){
   if(Execution_Queue->head==NULL)
     Insert_In_Empty_Queue(Join,Execution_Queue, stats1, stats2, num_of_columns1, num_of_columns2);
-    //Insert_In_Empty_Queue(Join,Execution_Queue);
   else
     Insert_At_End(Join,Execution_Queue, stats1, stats2, num_of_columns1, num_of_columns2);
-    //Insert_At_End(Join,Execution_Queue);
 }
 
 Join_Ptr Pop_Next_join(Execution_Queue_Ptr Execution_Queue){
