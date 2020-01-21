@@ -55,4 +55,6 @@ void Set_Column_u(Shell_Ptr, uint64_t, uint64_t);
 void Set_Column_f(Shell_Ptr, uint64_t, int64_t);
 void Set_Column_d(Shell_Ptr, uint64_t, int64_t);
 
+void Print_Shell(Shell_Ptr Shell, FILE *fp);
+
 #endif //MULTI_JOIN_TABLE_ALLOCATOR_H

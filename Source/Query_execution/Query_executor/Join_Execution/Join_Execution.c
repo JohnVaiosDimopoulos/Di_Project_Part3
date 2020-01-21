@@ -334,17 +334,8 @@ static void Execute_Normal_Join(Join_Ptr Current_Join,Intermediate_Result_Ptr In
       return;
     }
 
-
-    Print_Relation(Final_Relation_1, "REL_A");
-    Print_Relation(Final_Relation_2, "REL_B");
-
-
     Sort(Final_Relation_1);
     Sort(Final_Relation_2);
-
-    Print_Relation(Final_Relation_1, "REL_A_1");
-    Print_Relation(Final_Relation_2, "REL_B_1");
-
 
 
     List_Ptr List = Execute_Join(Final_Relation_1,Final_Relation_2);
@@ -377,13 +368,14 @@ static void Execute_Normal_Join(Join_Ptr Current_Join,Intermediate_Result_Ptr In
       temp=temp->next;
     }
 
-    Delete_List(List);
+
 
     Intermediate_Result->row_ids=result;
     Intermediate_Result->num_of_relations=2;
     Intermediate_Result->num_of_results=Get_num_of_results(List);
     Intermediate_Result->relations_in_result[rel_1]=1;
     Intermediate_Result->relations_in_result[rel_2]=1;
+    Delete_List(List);
 
   }
 

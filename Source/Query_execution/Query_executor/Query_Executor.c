@@ -18,13 +18,13 @@ void Execute_Query(Query_Ptr Query, Table_Ptr Table, FILE *fp, uint64_t **Result
   //execute filters first
   Execute_Filters(New_Table, Parsed_Query);
 
+
   //2.do the preparations
   Execution_Queue_Ptr Queue = Prepare_Execution_Queue(Parsed_Query, New_Table);
   //Print_Queue(Queue);
 
   //execute joins
   //Intermediate_Result_Ptr Res = Execute_Joins(Queue,New_Table,Table,relations);
-  //Print_Intermediate(Res,"int");
 
   //do projections
   //Execute_Projections(Res, Parsed_Query, Table, Results_array, query_id);

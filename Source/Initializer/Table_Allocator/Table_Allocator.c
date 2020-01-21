@@ -89,7 +89,7 @@ static char* Get_File_Name(char* line_buffer, int size) {
 //}
 
 
-static void Print_Shell(Shell_Ptr Shell, FILE *fp) {
+void Print_Shell(Shell_Ptr Shell, FILE *fp) {
   fprintf(fp, "sizes: %llu %llu\n", Shell->num_of_tuples, Shell->num_of_columns);
   for(int i = 0; i < Shell->num_of_columns; i++)
     fprintf(fp, "stats: l = %llu u = %llu f = %lu d = %lu\n", Shell->stats[i].l, Shell->stats[i].u, Shell->stats[i].f, Shell->stats[i].d);
@@ -196,7 +196,6 @@ void Setup_Column_Pointers(Tuple_Ptr* Array,int num_of_columns,int num_of_tuples
     last_index+=num_of_tuples;
   }
 }
-
 
 
 static void Fill_Shell(const char* FileName, Shell_Ptr Shell){
