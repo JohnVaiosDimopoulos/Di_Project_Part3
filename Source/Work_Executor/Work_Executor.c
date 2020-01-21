@@ -6,7 +6,7 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-#define LIMIT 13
+#define LIMIT 1
 
 int end_of_batch = 0;
 int end = 0;
@@ -41,7 +41,8 @@ void *myThreadFun(void *vargp) {
 	//printf("JOB...\n");
     //struct Args *args = (struct Args*) vargp;
     id = args->thread_id;
-    Query_Ptr Query = Allocate_And_Copy_Query(args->Current_Query);
+    //Query_Ptr Query = Allocate_And_Copy_Query(args->Current_Query);
+    Query_Ptr Query = args->Current_Query;
     Table_Ptr Relations = args->Relations;
     FILE *fp_write = args->fp_write;
     uint64_t **Results_array = args->Results_array;
@@ -50,8 +51,9 @@ void *myThreadFun(void *vargp) {
     //Print_Query(Query);
     printf("\n");
   
-    Delete_Query(args->Current_Query);
-    free(args->Current_Query);
+    //Delete_Query(args->Current_Query);
+    //free(args->Current_Query);
+    args->Current_Query = NULL;
     args->Relations = NULL;
     args->fp_write = NULL;
     args->Results_array = NULL;
@@ -94,7 +96,7 @@ void Start_Work(Table_Ptr Relations,Argument_Data_Ptr Arg_Data){
   args = (Args_Ptr)malloc(sizeof(struct Args));
   thread_id = (pthread_t*)malloc(LIMIT * sizeof(pthread_t));
   for(int i = 0; i < LIMIT; i++)
-    pthread_create(&thread_id[i], NULL, myThreadFun, (void *)args);
+    pthread_create(&thread_id[i], NULL, myThreadFun, NULL);
 
   while((Current_Batch = Read_next_Batch(fp)) != NULL) {
 
